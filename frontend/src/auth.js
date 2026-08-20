@@ -19,6 +19,7 @@ export function subscribeToAuth(callback) {
 
 export async function login(email, password) {
   await account.createEmailPasswordSession(email, password);
+  return account.get();
 }
 
 export async function logout() {

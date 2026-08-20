@@ -19,7 +19,8 @@ export default function RequireAuth({ children }) {
     setLoginError("");
     setLoggingIn(true);
     try {
-      await login(email, password);
+      const signedInUser = await login(email, password);
+      setUser(signedInUser);
     } catch (err) {
       console.error(err);
       setLoginError("Couldn't sign in. Check your email and password.");
