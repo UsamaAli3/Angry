@@ -27,7 +27,11 @@ export async function createCheckin({ whatHappened, angerLevel, whatWants }) {
       databaseId,
       collectionId,
       ID.unique(),
-      { ...answerData({ whatHappened, angerLevel, whatWants }), created_at: createdAt },
+      {
+        ...answerData({ whatHappened, angerLevel, whatWants }),
+        created_at: createdAt,
+        event_type: "checkin",
+      },
       [Permission.write(Role.any())],
     );
     return {
@@ -45,6 +49,20 @@ export async function createCheckin({ whatHappened, angerLevel, whatWants }) {
       throw new Error("Appwrite collection permissions must allow Any to create documents.");
     }
     throw new Error("Failed to save check-in.");
+  }
+}
+
+export async function recordVisit() {
+  try {
+    await databases.createDocument(
+      databaseId,
+      collectionId,
+      ID.unique(),
+      { created_at: new Date().toISOString(), event_type: "visit" },
+      [Permission.write(Role.any())],
+    );
+  } catch (err) {
+    console.error("Failed to record visit:", err);
   }
 }
 
@@ -68,10 +86,11 @@ export async function updateCheckin(id, { whatHappened, angerLevel, whatWants })
 
 export async function getCheckins() {
   try {
-    const response = await databases.listDocuments(databaseId, collectionId, [
-      Query.orderDesc("created_at"),
-    ]);
-    const checkins = response.documents.map((document) => {
+    const response = await databases.listDocuments(databaseId, collectionId, [Query.limit(100)]);
+    const checkins = response.documents
+      .filter((document) => !document.event_type || document.event_type === "checkin")
+      .sort((left, right) => right.created_at.localeCompare(left.created_at))
+      .map((document) => {
       const data = document;
       return {
         id: document.$id,
@@ -80,11 +99,21 @@ export async function getCheckins() {
         what_wants: data.what_wants,
         created_at: data.created_at ?? null,
       };
-    });
+      });
     return { checkins };
   } catch (err) {
     console.error("Failed to load check-ins:", err);
     throw new Error("Failed to load check-ins.");
+  }
+}
+
+export async function getVisitCount() {
+  try {
+    const response = await databases.listDocuments(databaseId, collectionId, [Query.limit(100)]);
+    return response.documents.filter((document) => document.event_type === "visit").length;
+  } catch (err) {
+    console.error("Failed to load visit count:", err);
+    throw new Error("Failed to load visitor count.");
   }
 }
 
@@ -102,9 +131,11 @@ export async function deleteAllCheckins() {
   try {
     const response = await databases.listDocuments(databaseId, collectionId, [Query.limit(100)]);
     await Promise.all(
-      response.documents.map((document) =>
+      response.documents
+        .filter((document) => !document.event_type || document.event_type === "checkin")
+        .map((document) =>
         databases.deleteDocument(databaseId, collectionId, document.$id),
-      ),
+        ),
     );
     return { success: true };
   } catch (err) {

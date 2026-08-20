@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCheckins, deleteCheckin, deleteAllCheckins } from "../data/api.js";
+import { getCheckins, getVisitCount, deleteCheckin, deleteAllCheckins } from "../data/api.js";
 import { logout } from "../auth.js";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
 
@@ -21,6 +21,7 @@ export default function MyRecords() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [visitCount, setVisitCount] = useState(0);
 
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [clearAllOpen, setClearAllOpen] = useState(false);
@@ -30,8 +31,9 @@ export default function MyRecords() {
     setLoading(true);
     setLoadError("");
     try {
-      const { checkins } = await getCheckins();
+      const [{ checkins }, visits] = await Promise.all([getCheckins(), getVisitCount()]);
       setRecords(checkins);
+      setVisitCount(visits);
     } catch (err) {
       console.error(err);
       setLoadError("We couldn't load your records. Please try again.");
@@ -78,6 +80,7 @@ export default function MyRecords() {
         <div>
           <h1 className="font-display font-bold text-2xl text-ink mb-1">📋 My Records</h1>
           <p className="text-mist text-sm">Total Check-Ins: {records.length}</p>
+          <p className="text-mist text-sm">Website Visits: {visitCount}</p>
         </div>
 
         {records.length > 0 && (
