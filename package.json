@@ -1,0 +1,10 @@
+{
+  "name": "mood-checkin",
+  "private": true,
+  "version": "1.0.0",
+  "description": "A simple, friendly mood check-in app backed by Appwrite.",
+  "scripts": {
+    "install:all": "npm install --prefix frontend",
+    "dev": "npm run dev --prefix frontend"
+  }
+}

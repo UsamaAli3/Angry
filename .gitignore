@@ -1,0 +1,23 @@
+node_modules/
+dist/
+build/
+
+# Environment files with your real Firebase keys — never commit these
+.env
+.env.local
+frontend/.env
+
+# Firebase CLI local files
+.firebase/
+firebase-debug.log
+.firebaserc
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+npm-debug.log*
+*.log

@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-cloud text-ink font-body;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Keep focus visible for keyboard users without adding extra motion */
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #5FBDB0;
+  outline-offset: 2px;
+}
+
+/* A quiet fade for each question as it's revealed — no movement, just a
+   gentle appearance so the next question doesn't feel like it snapped in. */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
