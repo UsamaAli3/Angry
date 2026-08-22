@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   getCheckins,
   getVisitCount,
+  getVisits,
   updateCheckin,
   deleteCheckin,
   deleteAllCheckins,
@@ -29,6 +30,7 @@ export default function MyRecords() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [visitCount, setVisitCount] = useState(0);
+  const [visits, setVisits] = useState([]);
 
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [clearAllOpen, setClearAllOpen] = useState(false);
@@ -40,9 +42,14 @@ export default function MyRecords() {
     setLoading(true);
     setLoadError("");
     try {
-      const [{ checkins }, visits] = await Promise.all([getCheckins(), getVisitCount()]);
+      const [{ checkins }, count, visitDetails] = await Promise.all([
+        getCheckins(),
+        getVisitCount(),
+        getVisits(),
+      ]);
       setRecords(checkins);
-      setVisitCount(visits);
+      setVisitCount(count);
+      setVisits(visitDetails);
     } catch (err) {
       console.error(err);
       setLoadError("We couldn't load your records. Please try again.");
@@ -266,6 +273,30 @@ export default function MyRecords() {
         </ul>
       )}
 
+      {!loading && !loadError && (
+        <section className="mt-8">
+          <h2 className="font-display font-bold text-xl text-ink mb-3">Website Visits</h2>
+          {visits.length === 0 ? (
+            <p className="text-mist text-sm">No visit details yet.</p>
+          ) : (
+            <ul className="space-y-3">
+              {visits.map((visit) => (
+                <li key={visit.$id} className="bg-white rounded-3xl shadow-soft p-5 text-sm">
+                  <p className="text-ink font-semibold mb-3">{formatTimestamp(visit.created_at)}</p>
+                  <VisitField label="Device" value={visit.device_info} />
+                  <VisitField label="Platform" value={visit.platform} />
+                  <VisitField label="Language" value={visit.language} />
+                  <VisitField label="Timezone" value={visit.timezone} />
+                  <VisitField label="Screen" value={visit.screen_size} />
+                  <VisitField label="Location" value={visit.location_info} />
+                  <VisitField label="Referrer" value={visit.referrer} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
       {pendingDeleteId !== null && (
         <ConfirmDialog
           message="Are you sure you want to delete this check-in?"
@@ -295,5 +326,14 @@ function RecordField({ label, value }) {
       <p className="text-mist text-xs uppercase tracking-wide font-medium mb-0.5">{label}</p>
       <p className="text-ink font-medium text-[15px]">{value || "Not answered yet"}</p>
     </div>
+  );
+}
+
+function VisitField({ label, value }) {
+  return (
+    <p className="mb-1 break-words">
+      <span className="text-mist font-medium">{label}: </span>
+      <span className="text-ink">{value || "Unknown"}</span>
+    </p>
   );
 }

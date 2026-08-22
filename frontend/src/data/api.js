@@ -78,16 +78,53 @@ export async function saveSettings(questions) {
 
 export async function recordVisit() {
   try {
+    const locationInfo = await getLocationInfo();
+    const visit = {
+      created_at: new Date().toISOString(),
+      event_type: "visit",
+      device_info: navigator.userAgent,
+      platform: navigator.platform || "Unknown",
+      language: navigator.language || "Unknown",
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown",
+      screen_size: `${window.screen.width}x${window.screen.height}`,
+      referrer: document.referrer || "Direct visit",
+      location_info: locationInfo,
+    };
     await databases.createDocument(
       databaseId,
       collectionId,
       ID.unique(),
-      { created_at: new Date().toISOString(), event_type: "visit" },
+      visit,
       [Permission.write(Role.any())],
     );
   } catch (err) {
     console.error("Failed to record visit:", err);
   }
+}
+
+function getLocationInfo() {
+  if (!navigator.geolocation) return Promise.resolve("Location unavailable");
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => resolve("Location permission not granted"), 3000);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        clearTimeout(timeout);
+        resolve(`${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`);
+      },
+      () => {
+        clearTimeout(timeout);
+        resolve("Location permission not granted");
+      },
+      { timeout: 2500, maximumAge: 300000 },
+    );
+  });
+}
+
+export async function getVisits() {
+  const response = await databases.listDocuments(databaseId, collectionId, [Query.limit(100)]);
+  return response.documents
+    .filter((document) => document.event_type === "visit")
+    .sort((left, right) => right.created_at.localeCompare(left.created_at));
 }
 
 // Updates an in-progress check-in in place (used while someone is still
