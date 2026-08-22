@@ -93,6 +93,14 @@ export default function Settings() {
                 className="mt-1 w-full px-3 py-2.5 rounded-xl border border-ink/10 text-ink"
               />
             </label>
+            <label className="flex items-center gap-2 mb-4 text-sm text-ink">
+              <input
+                type="checkbox"
+                checked={question.visible !== false}
+                onChange={(event) => updateQuestion(questionIndex, { visible: event.target.checked })}
+              />
+              Show this question to visitors
+            </label>
 
             <div className="space-y-2">
               {question.options.map((option, optionIndex) => (

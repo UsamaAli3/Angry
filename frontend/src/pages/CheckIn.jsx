@@ -21,13 +21,14 @@ export default function CheckIn() {
     getSettings().then(setQuestions);
   }, []);
 
-  const allAnswered = questions.every((q) => Boolean(answers[q.id]));
+  const visibleQuestions = questions.filter((question) => question.visible !== false);
+  const allAnswered = visibleQuestions.every((q) => Boolean(answers[q.id]));
 
   async function saveAnswers(updatedAnswers) {
     setStatus("saving");
     setErrorMessage("");
 
-    const willBeComplete = questions.every((q) => Boolean(updatedAnswers[q.id]));
+    const willBeComplete = visibleQuestions.every((q) => Boolean(updatedAnswers[q.id]));
 
     try {
       if (!currentRecordId.current) {
@@ -82,9 +83,9 @@ export default function CheckIn() {
       </header>
 
       <div className="space-y-8">
-        {questions.map((question, index) => {
+        {visibleQuestions.map((question, index) => {
           const isUnlocked =
-            index === 0 || Boolean(answers[questions[index - 1].id]);
+            index === 0 || Boolean(answers[visibleQuestions[index - 1].id]);
           if (!isUnlocked) return null;
 
           return (
