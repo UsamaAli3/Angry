@@ -89,6 +89,9 @@ export default function MyRecords() {
       whatHappened: record.what_happened ?? "",
       angerLevel: record.anger_level ?? "",
       whatWants: record.what_wants ?? "",
+      whatHappenedHeader: record.what_happened_header ?? questions[0].title,
+      angerLevelHeader: record.anger_level_header ?? questions[1].title,
+      whatWantsHeader: record.what_wants_header ?? questions[2].title,
     });
   }
 
@@ -109,6 +112,9 @@ export default function MyRecords() {
                 what_happened: editAnswers.whatHappened || null,
                 anger_level: editAnswers.angerLevel || null,
                 what_wants: editAnswers.whatWants || null,
+                what_happened_header: editAnswers.whatHappenedHeader,
+                anger_level_header: editAnswers.angerLevelHeader,
+                what_wants_header: editAnswers.whatWantsHeader,
               }
             : record,
         ),
@@ -179,11 +185,20 @@ export default function MyRecords() {
                 <div className="space-y-3">
                   {questions.map((question) => {
                     const field = question.id;
+                    const headerField = `${field}Header`;
                     return (
                       <label key={field} className="block">
-                        <span className="text-mist text-xs uppercase tracking-wide font-medium">
-                          {question.title}
-                        </span>
+                        <span className="text-mist text-xs uppercase tracking-wide font-medium">Header</span>
+                        <input
+                          value={editAnswers[headerField]}
+                          onChange={(event) =>
+                            setEditAnswers((prev) => ({
+                              ...prev,
+                              [headerField]: event.target.value,
+                            }))
+                          }
+                          className="mt-1 mb-2 w-full px-3 py-2.5 rounded-xl border border-ink/10 bg-white text-ink"
+                        />
                         <select
                           value={editAnswers[field]}
                           onChange={(event) =>
@@ -222,9 +237,9 @@ export default function MyRecords() {
                 </div>
               ) : (
                 <>
-                  <RecordField label="What happened?" value={record.what_happened} />
-                  <RecordField label="How angry?" value={record.anger_level} />
-                  <RecordField label="What do you want?" value={record.what_wants} />
+                  <RecordField label={record.what_happened_header || questions[0].title} value={record.what_happened} />
+                  <RecordField label={record.anger_level_header || questions[1].title} value={record.anger_level} />
+                  <RecordField label={record.what_wants_header || questions[2].title} value={record.what_wants} />
                 </>
               )}
 

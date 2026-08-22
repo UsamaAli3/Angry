@@ -31,6 +31,9 @@ export async function createCheckin({ whatHappened, angerLevel, whatWants }) {
         ...answerData({ whatHappened, angerLevel, whatWants }),
         created_at: createdAt,
         event_type: "checkin",
+        what_happened_header: "What happened?",
+        anger_level_header: "How angry are you?",
+        what_wants_header: "What do you want right now?",
       },
       [Permission.write(Role.any())],
     );
@@ -69,7 +72,17 @@ export async function recordVisit() {
 // Updates an in-progress check-in in place (used while someone is still
 // filling in their answers, before all three are done). This does not
 // touch created_at, so the record keeps its original save time.
-export async function updateCheckin(id, { whatHappened, angerLevel, whatWants }) {
+export async function updateCheckin(
+  id,
+  {
+    whatHappened,
+    angerLevel,
+    whatWants,
+    whatHappenedHeader,
+    angerLevelHeader,
+    whatWantsHeader,
+  },
+) {
   try {
     await databases.updateDocument(
       databaseId,
@@ -79,6 +92,9 @@ export async function updateCheckin(id, { whatHappened, angerLevel, whatWants })
         what_happened: whatHappened ?? null,
         anger_level: angerLevel ?? null,
         what_wants: whatWants ?? null,
+        what_happened_header: whatHappenedHeader ?? null,
+        anger_level_header: angerLevelHeader ?? null,
+        what_wants_header: whatWantsHeader ?? null,
       },
     );
     return { success: true };
@@ -101,6 +117,9 @@ export async function getCheckins() {
         what_happened: data.what_happened,
         anger_level: data.anger_level,
         what_wants: data.what_wants,
+        what_happened_header: data.what_happened_header,
+        anger_level_header: data.anger_level_header,
+        what_wants_header: data.what_wants_header,
         created_at: data.created_at ?? null,
       };
       });
