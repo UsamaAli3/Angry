@@ -28,6 +28,14 @@ export default function NavBar() {
         >
           📋 My Records
         </NavLink>
+        <NavLink
+          to="/settings"
+          className={({ isActive }) =>
+            `${linkBase} ${isActive ? "bg-bloom text-white shadow-soft" : "text-ink/70 hover:bg-white"}`
+          }
+        >
+          Settings
+        </NavLink>
       </div>
     </nav>
   );

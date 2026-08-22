@@ -11,4 +11,5 @@ export { ID, Permission, Role };
 export const appwriteConfig = {
   databaseId: import.meta.env.VITE_APPWRITE_DATABASE_ID,
   collectionId: import.meta.env.VITE_APPWRITE_COLLECTION_ID,
+  settingsCollectionId: import.meta.env.VITE_APPWRITE_SETTINGS_COLLECTION_ID,
 };

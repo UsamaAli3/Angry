@@ -1,11 +1,12 @@
-import { useState, useRef } from "react";
-import { questions } from "../data/questions.js";
-import { createCheckin, updateCheckin } from "../data/api.js";
+import { useState, useRef, useEffect } from "react";
+import { questions as defaultQuestions } from "../data/questions.js";
+import { createCheckin, getSettings, updateCheckin } from "../data/api.js";
 import OptionButton from "../components/OptionButton.jsx";
 
 const initialAnswers = { whatHappened: null, angerLevel: null, whatWants: null };
 
 export default function CheckIn() {
+  const [questions, setQuestions] = useState(defaultQuestions);
   const [answers, setAnswers] = useState(initialAnswers);
   // "idle" | "saving" | "saved" | "error"
   const [status, setStatus] = useState("idle");
@@ -15,6 +16,10 @@ export default function CheckIn() {
   // and whether that record already has all three answers.
   const currentRecordId = useRef(null);
   const sessionComplete = useRef(false);
+
+  useEffect(() => {
+    getSettings().then(setQuestions);
+  }, []);
 
   const allAnswered = questions.every((q) => Boolean(answers[q.id]));
 
@@ -27,7 +32,7 @@ export default function CheckIn() {
     try {
       if (!currentRecordId.current) {
         // First answer of a fresh check-in — create the record right away.
-        const { checkin } = await createCheckin(updatedAnswers);
+        const { checkin } = await createCheckin(updatedAnswers, questions);
         currentRecordId.current = checkin.id;
       } else if (!sessionComplete.current) {
         // Still filling this one in — keep updating the same record.
@@ -35,7 +40,7 @@ export default function CheckIn() {
       } else {
         // This check-in was already finished — an edit now starts a new
         // record so the finished one stays exactly as it was.
-        const { checkin } = await createCheckin(updatedAnswers);
+        const { checkin } = await createCheckin(updatedAnswers, questions);
         currentRecordId.current = checkin.id;
       }
       sessionComplete.current = willBeComplete;

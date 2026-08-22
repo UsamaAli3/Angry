@@ -5,8 +5,9 @@
 
 import { Query } from "appwrite";
 import { ID, Permission, Role, appwriteConfig, databases } from "../appwrite.js";
+import { questions as defaultQuestions } from "./questions.js";
 
-const { databaseId, collectionId } = appwriteConfig;
+const { databaseId, collectionId, settingsCollectionId } = appwriteConfig;
 
 function answerData({ whatHappened, angerLevel, whatWants }) {
   return Object.fromEntries(
@@ -20,7 +21,10 @@ function answerData({ whatHappened, angerLevel, whatWants }) {
 
 // Answers may be partial here — a check-in can be saved with only one or
 // two of the three questions answered so far.
-export async function createCheckin({ whatHappened, angerLevel, whatWants }) {
+export async function createCheckin(
+  { whatHappened, angerLevel, whatWants },
+  questions = defaultQuestions,
+) {
   try {
     const createdAt = new Date().toISOString();
     const docRef = await databases.createDocument(
@@ -31,9 +35,9 @@ export async function createCheckin({ whatHappened, angerLevel, whatWants }) {
         ...answerData({ whatHappened, angerLevel, whatWants }),
         created_at: createdAt,
         event_type: "checkin",
-        what_happened_header: "What happened?",
-        anger_level_header: "How angry are you?",
-        what_wants_header: "What do you want right now?",
+        what_happened_header: questions[0]?.title ?? defaultQuestions[0].title,
+        anger_level_header: questions[1]?.title ?? defaultQuestions[1].title,
+        what_wants_header: questions[2]?.title ?? defaultQuestions[2].title,
       },
       [Permission.write(Role.any())],
     );
@@ -53,6 +57,23 @@ export async function createCheckin({ whatHappened, angerLevel, whatWants }) {
     }
     throw new Error("Failed to save check-in.");
   }
+}
+
+export async function getSettings() {
+  if (!settingsCollectionId) return defaultQuestions;
+  try {
+    const document = await databases.getDocument(databaseId, settingsCollectionId, "global-settings");
+    return JSON.parse(document.config);
+  } catch (err) {
+    console.error("Failed to load settings:", err);
+    return defaultQuestions;
+  }
+}
+
+export async function saveSettings(questions) {
+  await databases.updateDocument(databaseId, settingsCollectionId, "global-settings", {
+    config: JSON.stringify(questions),
+  });
 }
 
 export async function recordVisit() {
