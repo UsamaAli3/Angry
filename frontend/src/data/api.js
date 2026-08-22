@@ -60,19 +60,25 @@ export async function createCheckin(
 }
 
 export async function getSettings() {
-  if (!settingsCollectionId) return defaultQuestions;
+  const defaultSettings = {
+    title: "How are you feeling?",
+    description: "Choose the answers that feel closest. You don't need to type anything.",
+    questions: defaultQuestions,
+  };
+  if (!settingsCollectionId) return defaultSettings;
   try {
     const document = await databases.getDocument(databaseId, settingsCollectionId, "global-settings");
-    return JSON.parse(document.config);
+    const config = JSON.parse(document.config);
+    return Array.isArray(config) ? { ...defaultSettings, questions: config } : config;
   } catch (err) {
     console.error("Failed to load settings:", err);
-    return defaultQuestions;
+    return defaultSettings;
   }
 }
 
-export async function saveSettings(questions) {
+export async function saveSettings(settings) {
   await databases.updateDocument(databaseId, settingsCollectionId, "global-settings", {
-    config: JSON.stringify(questions),
+    config: JSON.stringify(settings),
   });
 }
 

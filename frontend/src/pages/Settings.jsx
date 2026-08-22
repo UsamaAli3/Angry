@@ -3,12 +3,14 @@ import { getSettings, saveSettings } from "../data/api.js";
 
 export default function Settings() {
   const [questions, setQuestions] = useState([]);
+  const [intro, setIntro] = useState({ title: "", description: "" });
   const [status, setStatus] = useState("loading");
   const [error, setError] = useState("");
 
   useEffect(() => {
     getSettings().then((value) => {
-      setQuestions(value);
+      setQuestions(value.questions);
+      setIntro({ title: value.title, description: value.description });
       setStatus("ready");
     });
   }, []);
@@ -61,7 +63,7 @@ export default function Settings() {
     setStatus("saving");
     setError("");
     try {
-      await saveSettings(questions);
+      await saveSettings({ ...intro, questions });
       setStatus("saved");
     } catch (err) {
       console.error(err);
@@ -82,6 +84,28 @@ export default function Settings() {
       </header>
 
       <form onSubmit={handleSave} className="space-y-5">
+        <section className="bg-white rounded-3xl shadow-soft p-5">
+          <label className="block mb-4">
+            <span className="text-mist text-xs uppercase tracking-wide font-medium">Main heading</span>
+            <input
+              value={intro.title}
+              onChange={(event) => setIntro((current) => ({ ...current, title: event.target.value }))}
+              required
+              className="mt-1 w-full px-3 py-2.5 rounded-xl border border-ink/10 text-ink"
+            />
+          </label>
+          <label className="block">
+            <span className="text-mist text-xs uppercase tracking-wide font-medium">Supporting text</span>
+            <textarea
+              value={intro.description}
+              onChange={(event) => setIntro((current) => ({ ...current, description: event.target.value }))}
+              required
+              rows={3}
+              className="mt-1 w-full px-3 py-2.5 rounded-xl border border-ink/10 text-ink"
+            />
+          </label>
+        </section>
+
         {questions.map((question, questionIndex) => (
           <section key={question.id} className="bg-white rounded-3xl shadow-soft p-5">
             <label className="block mb-4">

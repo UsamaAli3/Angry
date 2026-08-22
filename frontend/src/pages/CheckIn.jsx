@@ -7,6 +7,10 @@ const initialAnswers = { whatHappened: null, angerLevel: null, whatWants: null }
 
 export default function CheckIn() {
   const [questions, setQuestions] = useState(defaultQuestions);
+  const [intro, setIntro] = useState({
+    title: "How are you feeling?",
+    description: "Choose the answers that feel closest. You don't need to type anything.",
+  });
   const [answers, setAnswers] = useState(initialAnswers);
   // "idle" | "saving" | "saved" | "error"
   const [status, setStatus] = useState("idle");
@@ -18,7 +22,10 @@ export default function CheckIn() {
   const sessionComplete = useRef(false);
 
   useEffect(() => {
-    getSettings().then(setQuestions);
+    getSettings().then((settings) => {
+      setQuestions(settings.questions);
+      setIntro({ title: settings.title, description: settings.description });
+    });
   }, []);
 
   const visibleQuestions = questions.filter((question) => question.visible !== false);
@@ -75,10 +82,10 @@ export default function CheckIn() {
     <div className="max-w-xl mx-auto px-4 py-8">
       <header className="text-center mb-8">
         <h1 className="font-display font-bold text-2xl sm:text-3xl text-ink mb-2">
-          How are you feeling?
+          {intro.title}
         </h1>
         <p className="text-mist text-sm sm:text-base">
-          Choose the answers that feel closest. You don't need to type anything.
+          {intro.description}
         </p>
       </header>
 
