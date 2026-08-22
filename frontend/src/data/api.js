@@ -75,7 +75,11 @@ export async function updateCheckin(id, { whatHappened, angerLevel, whatWants })
       databaseId,
       collectionId,
       id,
-      answerData({ whatHappened, angerLevel, whatWants }),
+      {
+        what_happened: whatHappened ?? null,
+        anger_level: angerLevel ?? null,
+        what_wants: whatWants ?? null,
+      },
     );
     return { success: true };
   } catch (err) {

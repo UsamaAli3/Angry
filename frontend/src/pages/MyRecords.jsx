@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
-import { getCheckins, getVisitCount, deleteCheckin, deleteAllCheckins } from "../data/api.js";
+import {
+  getCheckins,
+  getVisitCount,
+  updateCheckin,
+  deleteCheckin,
+  deleteAllCheckins,
+} from "../data/api.js";
 import { logout } from "../auth.js";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
+import { questions } from "../data/questions.js";
 
 function formatTimestamp(isoString) {
   const date = new Date(isoString);
@@ -26,6 +33,8 @@ export default function MyRecords() {
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [clearAllOpen, setClearAllOpen] = useState(false);
   const [busyAction, setBusyAction] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editAnswers, setEditAnswers] = useState({});
 
   async function loadRecords() {
     setLoading(true);
@@ -69,6 +78,45 @@ export default function MyRecords() {
     } catch (err) {
       console.error(err);
       setLoadError("We couldn't clear your records. Please try again.");
+    } finally {
+      setBusyAction(false);
+    }
+  }
+
+  function startEditing(record) {
+    setEditingId(record.id);
+    setEditAnswers({
+      whatHappened: record.what_happened ?? "",
+      angerLevel: record.anger_level ?? "",
+      whatWants: record.what_wants ?? "",
+    });
+  }
+
+  function cancelEditing() {
+    setEditingId(null);
+    setEditAnswers({});
+  }
+
+  async function saveEditing() {
+    setBusyAction(true);
+    try {
+      await updateCheckin(editingId, editAnswers);
+      setRecords((prev) =>
+        prev.map((record) =>
+          record.id === editingId
+            ? {
+                ...record,
+                what_happened: editAnswers.whatHappened || null,
+                anger_level: editAnswers.angerLevel || null,
+                what_wants: editAnswers.whatWants || null,
+              }
+            : record,
+        ),
+      );
+      cancelEditing();
+    } catch (err) {
+      console.error(err);
+      setLoadError("We couldn't update that check-in. Please try again.");
     } finally {
       setBusyAction(false);
     }
@@ -127,17 +175,77 @@ export default function MyRecords() {
                 {formatTimestamp(record.created_at)}
               </p>
 
-              <RecordField label="What happened?" value={record.what_happened} />
-              <RecordField label="How angry?" value={record.anger_level} />
-              <RecordField label="What do you want?" value={record.what_wants} />
+              {editingId === record.id ? (
+                <div className="space-y-3">
+                  {questions.map((question) => {
+                    const field = question.id;
+                    return (
+                      <label key={field} className="block">
+                        <span className="text-mist text-xs uppercase tracking-wide font-medium">
+                          {question.title}
+                        </span>
+                        <select
+                          value={editAnswers[field]}
+                          onChange={(event) =>
+                            setEditAnswers((prev) => ({ ...prev, [field]: event.target.value }))
+                          }
+                          className="mt-1 w-full px-3 py-2.5 rounded-xl border border-ink/10 bg-white text-ink"
+                        >
+                          <option value="">Not answered</option>
+                          {question.options.map((option) => (
+                            <option key={option.label} value={option.label}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    );
+                  })}
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={saveEditing}
+                      disabled={busyAction}
+                      className="px-3.5 py-2 rounded-2xl font-display font-semibold text-sm text-white bg-calm hover:bg-calmDark disabled:opacity-50"
+                    >
+                      {busyAction ? "Saving…" : "Save Changes"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelEditing}
+                      disabled={busyAction}
+                      className="px-3.5 py-2 rounded-2xl font-display font-semibold text-sm text-ink bg-cloud hover:bg-ink/5 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <RecordField label="What happened?" value={record.what_happened} />
+                  <RecordField label="How angry?" value={record.anger_level} />
+                  <RecordField label="What do you want?" value={record.what_wants} />
+                </>
+              )}
 
-              <button
-                type="button"
-                onClick={() => setPendingDeleteId(record.id)}
-                className="mt-4 px-3.5 py-2 rounded-2xl font-display font-semibold text-sm text-bloomDark bg-bloom/10 hover:bg-bloom/20 transition-colors"
-              >
-                Delete
-              </button>
+              {editingId !== record.id && (
+                <div className="mt-4 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => startEditing(record)}
+                    className="px-3.5 py-2 rounded-2xl font-display font-semibold text-sm text-calm bg-calm/10 hover:bg-calm/20 transition-colors"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPendingDeleteId(record.id)}
+                    className="px-3.5 py-2 rounded-2xl font-display font-semibold text-sm text-bloomDark bg-bloom/10 hover:bg-bloom/20 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>
