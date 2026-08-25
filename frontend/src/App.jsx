@@ -4,6 +4,7 @@ import RequireAuth from "./components/RequireAuth.jsx";
 import CheckIn from "./pages/CheckIn.jsx";
 import MyRecords from "./pages/MyRecords.jsx";
 import Settings from "./pages/Settings.jsx";
+import IceCreamGame from "./pages/IceCreamGame.jsx";
 import { recordVisit } from "./data/api.js";
 import { useEffect } from "react";
 
@@ -19,6 +20,7 @@ export default function App() {
       <NavBar />
       <Routes>
         <Route path="/" element={<CheckIn />} />
+        <Route path="/ice-cream" element={<IceCreamGame />} />
         <Route
           path="/records"
           element={

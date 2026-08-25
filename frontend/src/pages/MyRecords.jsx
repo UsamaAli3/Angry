@@ -31,6 +31,7 @@ export default function MyRecords() {
   const [loadError, setLoadError] = useState("");
   const [visitCount, setVisitCount] = useState(0);
   const [visits, setVisits] = useState([]);
+  const [activeTab, setActiveTab] = useState("checkins");
 
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [clearAllOpen, setClearAllOpen] = useState(false);
@@ -140,11 +141,10 @@ export default function MyRecords() {
       <header className="flex items-start justify-between gap-3 mb-6">
         <div>
           <h1 className="font-display font-bold text-2xl text-ink mb-1">📋 My Records</h1>
-          <p className="text-mist text-sm">Total Check-Ins: {records.length}</p>
-          <p className="text-mist text-sm">Website Visits: {visitCount}</p>
+          <p className="text-mist text-sm">View check-ins and website visits separately.</p>
         </div>
 
-        {records.length > 0 && (
+        {activeTab === "checkins" && records.length > 0 && (
           <button
             type="button"
             onClick={() => setClearAllOpen(true)}
@@ -165,6 +165,37 @@ export default function MyRecords() {
         </button>
       </div>
 
+      <div className="grid grid-cols-2 gap-3 mb-6" role="tablist" aria-label="Record type">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "checkins"}
+          onClick={() => setActiveTab("checkins")}
+          className={`rounded-2xl p-4 text-left transition-colors ${
+            activeTab === "checkins"
+              ? "bg-bloom text-white shadow-soft"
+              : "bg-white text-ink hover:bg-bloom/5"
+          }`}
+        >
+          <span className="block text-2xl font-display font-bold">{records.length}</span>
+          <span className="text-sm font-semibold">Check-Ins</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "visits"}
+          onClick={() => setActiveTab("visits")}
+          className={`rounded-2xl p-4 text-left transition-colors ${
+            activeTab === "visits"
+              ? "bg-calm text-white shadow-soft"
+              : "bg-white text-ink hover:bg-calm/5"
+          }`}
+        >
+          <span className="block text-2xl font-display font-bold">{visitCount}</span>
+          <span className="text-sm font-semibold">Website Visits</span>
+        </button>
+      </div>
+
       {loading && <p className="text-mist text-center py-10">Loading records…</p>}
 
       {!loading && loadError && (
@@ -173,14 +204,14 @@ export default function MyRecords() {
         </p>
       )}
 
-      {!loading && !loadError && records.length === 0 && (
+      {!loading && !loadError && activeTab === "checkins" && records.length === 0 && (
         <div className="text-center py-14">
           <p className="font-display font-semibold text-lg text-ink mb-1">No check-ins yet</p>
           <p className="text-mist text-sm">Submitted check-ins will appear here.</p>
         </div>
       )}
 
-      {!loading && !loadError && records.length > 0 && (
+      {!loading && !loadError && activeTab === "checkins" && records.length > 0 && (
         <ul className="space-y-4">
           {records.map((record) => (
             <li key={record.id} className="bg-white rounded-3xl shadow-soft p-5">
@@ -273,8 +304,8 @@ export default function MyRecords() {
         </ul>
       )}
 
-      {!loading && !loadError && (
-        <section className="mt-8">
+      {!loading && !loadError && activeTab === "visits" && (
+        <section>
           <h2 className="font-display font-bold text-xl text-ink mb-3">Website Visits</h2>
           {visits.length === 0 ? (
             <p className="text-mist text-sm">No visit details yet.</p>

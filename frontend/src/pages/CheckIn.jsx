@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { questions as defaultQuestions } from "../data/questions.js";
 import { createCheckin, getSettings, updateCheckin } from "../data/api.js";
 import OptionButton from "../components/OptionButton.jsx";
@@ -15,11 +16,13 @@ export default function CheckIn() {
   // "idle" | "saving" | "saved" | "error"
   const [status, setStatus] = useState("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [celebration, setCelebration] = useState(null);
 
   // The id of the record representing the current in-progress check-in,
   // and whether that record already has all three answers.
   const currentRecordId = useRef(null);
   const sessionComplete = useRef(false);
+  const celebrationTimer = useRef(null);
 
   useEffect(() => {
     getSettings().then((settings) => {
@@ -60,10 +63,18 @@ export default function CheckIn() {
     }
   }
 
-  function selectAnswer(questionId, label) {
-    const updatedAnswers = { ...answers, [questionId]: label };
+  function selectAnswer(questionId, option) {
+    const updatedAnswers = { ...answers, [questionId]: option.label };
     setAnswers(updatedAnswers);
     saveAnswers(updatedAnswers);
+
+    window.clearTimeout(celebrationTimer.current);
+    setCelebration({
+      id: Date.now(),
+      emoji: option.emoji,
+      message: "Great choice — thanks for checking in!",
+    });
+    celebrationTimer.current = window.setTimeout(() => setCelebration(null), 1600);
   }
 
   function retrySave() {
@@ -76,6 +87,8 @@ export default function CheckIn() {
     sessionComplete.current = false;
     setStatus("idle");
     setErrorMessage("");
+    setCelebration(null);
+    window.clearTimeout(celebrationTimer.current);
   }
 
   return (
@@ -89,16 +102,63 @@ export default function CheckIn() {
         </p>
       </header>
 
+      <AnimatePresence>
+        {celebration && (
+          <motion.div
+            key={celebration.id}
+            initial={{ opacity: 0, scale: 0.65, y: -18 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.85, y: -12 }}
+            transition={{ type: "spring", stiffness: 340, damping: 20 }}
+            className="fixed left-1/2 top-24 z-30 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 overflow-hidden rounded-3xl border border-bloom/20 bg-white/95 p-5 text-center shadow-xl backdrop-blur"
+            role="status"
+          >
+            {["✨", "💫", "⭐", "✨"].map((sparkle, index) => (
+              <motion.span
+                key={`${celebration.id}-${index}`}
+                initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
+                animate={{
+                  opacity: [0, 1, 0],
+                  x: [-10, -72, 62, 80][index],
+                  y: [-10, -42, -48, 5][index],
+                  scale: [0, 1.2, 0.7],
+                  rotate: [0, -35, 25, 45][index],
+                }}
+                transition={{ duration: 1, delay: index * 0.06 }}
+                className="absolute left-1/2 top-1/2 text-xl"
+                aria-hidden="true"
+              >
+                {sparkle}
+              </motion.span>
+            ))}
+            <motion.div
+              initial={{ rotate: -12, scale: 0.5 }}
+              animate={{ rotate: [0, -8, 8, 0], scale: 1 }}
+              className="relative mb-2 text-5xl"
+              aria-hidden="true"
+            >
+              {celebration.emoji}
+            </motion.div>
+            <p className="relative font-display font-bold text-ink">{celebration.message}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="space-y-8">
+        <AnimatePresence initial={false}>
         {visibleQuestions.map((question, index) => {
           const isUnlocked =
             index === 0 || Boolean(answers[visibleQuestions[index - 1].id]);
           if (!isUnlocked) return null;
 
           return (
-            <section
+            <motion.section
               key={question.id}
-              className="animate-[fadeIn_0.25s_ease-out]"
+              layout
+              initial={{ opacity: 0, y: 16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ type: "spring", stiffness: 260, damping: 24 }}
             >
               <h2 className="font-display font-semibold text-lg text-ink mb-3">
                 {question.title}
@@ -110,16 +170,17 @@ export default function CheckIn() {
                     emoji={option.emoji}
                     label={option.label}
                     selected={answers[question.id] === option.label}
-                    onClick={() => selectAnswer(question.id, option.label)}
+                    onClick={() => selectAnswer(question.id, option)}
                   />
                 ))}
               </div>
-            </section>
+            </motion.section>
           );
         })}
+        </AnimatePresence>
       </div>
 
-      <div className="mt-8" aria-live="polite">
+      <motion.div layout className="mt-8" aria-live="polite">
         {status === "saving" && (
           <p className="text-mist text-sm font-medium text-center">Saving…</p>
         )}
@@ -138,13 +199,15 @@ export default function CheckIn() {
             <p className="text-mist text-sm mb-4">
               Change any answer above to save a new check-in.
             </p>
-            <button
+            <motion.button
               type="button"
               onClick={startOver}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.96 }}
               className="px-6 py-2.5 rounded-2xl font-display font-semibold text-sm bg-calm text-white hover:bg-calmDark transition-colors"
             >
               Start a New Check-In
-            </button>
+            </motion.button>
           </div>
         )}
 
@@ -162,7 +225,7 @@ export default function CheckIn() {
             </button>
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }

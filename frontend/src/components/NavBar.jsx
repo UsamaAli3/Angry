@@ -1,12 +1,18 @@
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
+import { subscribeToAuth } from "../auth.js";
 
 const linkBase =
   "flex-1 sm:flex-none text-center px-4 py-2.5 rounded-2xl font-display font-semibold text-sm sm:text-base transition-colors";
 
 export default function NavBar() {
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => subscribeToAuth((user) => setIsAdmin(Boolean(user))), []);
+
   return (
     <nav className="sticky top-0 z-10 bg-cloud/90 backdrop-blur border-b border-ink/5">
-      <div className="max-w-xl mx-auto px-4 py-3 flex gap-2">
+      <div className="max-w-5xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto">
         <NavLink
           to="/"
           end
@@ -19,6 +25,16 @@ export default function NavBar() {
           Check In
         </NavLink>
         <NavLink
+          to="/ice-cream"
+          className={({ isActive }) =>
+            `${linkBase} whitespace-nowrap ${
+              isActive ? "bg-sunny text-white shadow-soft" : "text-ink/70 hover:bg-white"
+            }`
+          }
+        >
+          🍦 Marry’s Shop
+        </NavLink>
+        {isAdmin && <NavLink
           to="/records"
           className={({ isActive }) =>
             `${linkBase} ${
@@ -27,15 +43,15 @@ export default function NavBar() {
           }
         >
           📋 My Records
-        </NavLink>
-        <NavLink
+        </NavLink>}
+        {isAdmin && <NavLink
           to="/settings"
           className={({ isActive }) =>
             `${linkBase} ${isActive ? "bg-bloom text-white shadow-soft" : "text-ink/70 hover:bg-white"}`
           }
         >
           Settings
-        </NavLink>
+        </NavLink>}
       </div>
     </nav>
   );

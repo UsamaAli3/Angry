@@ -8,20 +8,31 @@ import { account } from "./appwrite.js";
 // callback receives the current user object, or null when signed out.
 export function subscribeToAuth(callback) {
   let active = true;
-  account
-    .get()
-    .then((user) => active && callback(user))
-    .catch(() => active && callback(null));
+
+  const refreshUser = () => {
+    account
+      .get()
+      .then((user) => active && callback(user))
+      .catch(() => active && callback(null));
+  };
+
+  refreshUser();
+  window.addEventListener("auth-changed", refreshUser);
+
   return () => {
     active = false;
+    window.removeEventListener("auth-changed", refreshUser);
   };
 }
 
 export async function login(email, password) {
   await account.createEmailPasswordSession(email, password);
-  return account.get();
+  const user = await account.get();
+  window.dispatchEvent(new Event("auth-changed"));
+  return user;
 }
 
 export async function logout() {
   await account.deleteSession("current");
+  window.dispatchEvent(new Event("auth-changed"));
 }
