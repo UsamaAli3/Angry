@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { questions as defaultQuestions } from "../data/questions.js";
 import { createCheckin, getSettings, updateCheckin } from "../data/api.js";
 import OptionButton from "../components/OptionButton.jsx";
+import Plasma from "../components/Plasma.jsx";
 
 const initialAnswers = { whatHappened: null, angerLevel: null, whatWants: null };
 
@@ -92,12 +93,24 @@ export default function CheckIn() {
   }
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-8">
+    <main className="relative min-h-[calc(100vh-70px)] overflow-hidden">
+      <div className="pointer-events-none absolute inset-0">
+        <Plasma
+          colorA="#E8798A"
+          colorB="#5FBDB0"
+          speed={0.72}
+          scale={1.2}
+          opacity={1}
+          mouseInteractive
+        />
+      </div>
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#100D20]/5 via-[#100D20]/25 to-[#100D20]/75" />
+      <div className="relative max-w-xl mx-auto px-4 py-8">
       <header className="text-center mb-8">
-        <h1 className="font-display font-bold text-2xl sm:text-3xl text-ink mb-2">
+        <h1 className="font-display font-bold text-2xl sm:text-3xl text-white mb-2 drop-shadow-lg">
           {intro.title}
         </h1>
-        <p className="text-mist text-sm sm:text-base">
+        <p className="text-white/70 text-sm sm:text-base">
           {intro.description}
         </p>
       </header>
@@ -160,7 +173,7 @@ export default function CheckIn() {
               exit={{ opacity: 0, y: -8 }}
               transition={{ type: "spring", stiffness: 260, damping: 24 }}
             >
-              <h2 className="font-display font-semibold text-lg text-ink mb-3">
+              <h2 className="font-display font-semibold text-lg text-white mb-3 drop-shadow">
                 {question.title}
               </h2>
               <div className="grid gap-2.5">
@@ -182,21 +195,21 @@ export default function CheckIn() {
 
       <motion.div layout className="mt-8" aria-live="polite">
         {status === "saving" && (
-          <p className="text-mist text-sm font-medium text-center">Saving…</p>
+          <p className="text-white/65 text-sm font-medium text-center">Saving…</p>
         )}
 
         {status === "saved" && !allAnswered && (
-          <p className="text-mist text-sm text-center">
+          <p className="text-white/65 text-sm text-center">
             Saved. Keep going whenever you're ready.
           </p>
         )}
 
         {status === "saved" && allAnswered && (
           <div className="text-center">
-            <p className="font-display font-bold text-lg text-ink mb-1">
+            <p className="font-display font-bold text-lg text-white mb-1">
               Thank you for telling me.
             </p>
-            <p className="text-mist text-sm mb-4">
+            <p className="text-white/65 text-sm mb-4">
               Change any answer above to save a new check-in.
             </p>
             <motion.button
@@ -226,6 +239,7 @@ export default function CheckIn() {
           </div>
         )}
       </motion.div>
-    </div>
+      </div>
+    </main>
   );
 }

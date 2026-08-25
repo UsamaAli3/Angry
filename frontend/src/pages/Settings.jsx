@@ -79,8 +79,8 @@ export default function Settings() {
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
       <header className="mb-7">
-        <h1 className="font-display font-bold text-2xl text-ink mb-1">Check-In Settings</h1>
-        <p className="text-mist text-sm">Customize the headers and answer choices visitors see.</p>
+        <h1 className="font-display font-bold text-2xl text-white mb-1">Check-In Settings</h1>
+        <p className="text-white/60 text-sm">Customize the headers and answer choices visitors see.</p>
       </header>
 
       <form onSubmit={handleSave} className="space-y-5">

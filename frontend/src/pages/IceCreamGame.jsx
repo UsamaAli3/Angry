@@ -99,10 +99,10 @@ export default function IceCreamGame() {
           >
             Made exclusively for Marry
           </motion.p>
-          <h1 className="font-display text-4xl font-bold text-ink sm:text-5xl">
+          <h1 className="font-display text-4xl font-bold text-white sm:text-5xl">
             Marry’s Ice Cream Shop
           </h1>
-          <p className="mx-auto mt-3 max-w-xl text-sm text-mist sm:text-base">
+          <p className="mx-auto mt-3 max-w-xl text-sm text-white/60 sm:text-base">
             A little premium scoop studio made especially for Marry. Pick a flavor, add magical ingredients, and enjoy.
           </p>
         </header>

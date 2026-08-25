@@ -140,8 +140,8 @@ export default function MyRecords() {
     <div className="max-w-xl mx-auto px-4 py-8">
       <header className="flex items-start justify-between gap-3 mb-6">
         <div>
-          <h1 className="font-display font-bold text-2xl text-ink mb-1">📋 My Records</h1>
-          <p className="text-mist text-sm">View check-ins and website visits separately.</p>
+          <h1 className="font-display font-bold text-2xl text-white mb-1">📋 My Records</h1>
+          <p className="text-white/60 text-sm">View check-ins and website visits separately.</p>
         </div>
 
         {activeTab === "checkins" && records.length > 0 && (
@@ -206,7 +206,7 @@ export default function MyRecords() {
 
       {!loading && !loadError && activeTab === "checkins" && records.length === 0 && (
         <div className="text-center py-14">
-          <p className="font-display font-semibold text-lg text-ink mb-1">No check-ins yet</p>
+          <p className="font-display font-semibold text-lg text-white mb-1">No check-ins yet</p>
           <p className="text-mist text-sm">Submitted check-ins will appear here.</p>
         </div>
       )}
@@ -306,7 +306,7 @@ export default function MyRecords() {
 
       {!loading && !loadError && activeTab === "visits" && (
         <section>
-          <h2 className="font-display font-bold text-xl text-ink mb-3">Website Visits</h2>
+          <h2 className="font-display font-bold text-xl text-white mb-3">Website Visits</h2>
           {visits.length === 0 ? (
             <p className="text-mist text-sm">No visit details yet.</p>
           ) : (

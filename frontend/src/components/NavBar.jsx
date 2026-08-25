@@ -11,14 +11,14 @@ export default function NavBar() {
   useEffect(() => subscribeToAuth((user) => setIsAdmin(Boolean(user))), []);
 
   return (
-    <nav className="sticky top-0 z-10 bg-cloud/90 backdrop-blur border-b border-ink/5">
+    <nav className="sticky top-0 z-40 border-b border-white/10 bg-[#100D20]/90 shadow-lg shadow-black/10 backdrop-blur-xl">
       <div className="max-w-5xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto">
         <NavLink
           to="/"
           end
           className={({ isActive }) =>
             `${linkBase} ${
-              isActive ? "bg-bloom text-white shadow-soft" : "text-ink/70 hover:bg-white"
+              isActive ? "bg-bloom text-white shadow-soft" : "text-white/70 hover:bg-white/10 hover:text-white"
             }`
           }
         >
@@ -28,7 +28,7 @@ export default function NavBar() {
           to="/ice-cream"
           className={({ isActive }) =>
             `${linkBase} whitespace-nowrap ${
-              isActive ? "bg-sunny text-white shadow-soft" : "text-ink/70 hover:bg-white"
+              isActive ? "bg-sunny text-white shadow-soft" : "text-white/70 hover:bg-white/10 hover:text-white"
             }`
           }
         >
@@ -38,7 +38,7 @@ export default function NavBar() {
           to="/records"
           className={({ isActive }) =>
             `${linkBase} ${
-              isActive ? "bg-bloom text-white shadow-soft" : "text-ink/70 hover:bg-white"
+              isActive ? "bg-bloom text-white shadow-soft" : "text-white/70 hover:bg-white/10 hover:text-white"
             }`
           }
         >
@@ -47,7 +47,7 @@ export default function NavBar() {
         {isAdmin && <NavLink
           to="/settings"
           className={({ isActive }) =>
-            `${linkBase} ${isActive ? "bg-bloom text-white shadow-soft" : "text-ink/70 hover:bg-white"}`
+            `${linkBase} ${isActive ? "bg-bloom text-white shadow-soft" : "text-white/70 hover:bg-white/10 hover:text-white"}`
           }
         >
           Settings

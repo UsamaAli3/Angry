@@ -16,7 +16,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-cloud">
+    <div className="min-h-screen bg-[#100D20]">
       <NavBar />
       <Routes>
         <Route path="/" element={<CheckIn />} />

@@ -9,7 +9,7 @@ body,
 }
 
 body {
-  @apply bg-cloud text-ink font-body;
+  @apply bg-[#100D20] text-ink font-body;
   -webkit-tap-highlight-color: transparent;
 }
 
