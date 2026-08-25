@@ -4,6 +4,7 @@ import { getSettings, saveSettings } from "../data/api.js";
 export default function Settings() {
   const [questions, setQuestions] = useState([]);
   const [intro, setIntro] = useState({ title: "", description: "" });
+  const [showIceCreamShop, setShowIceCreamShop] = useState(false);
   const [status, setStatus] = useState("loading");
   const [error, setError] = useState("");
 
@@ -11,6 +12,7 @@ export default function Settings() {
     getSettings().then((value) => {
       setQuestions(value.questions);
       setIntro({ title: value.title, description: value.description });
+      setShowIceCreamShop(Boolean(value.showIceCreamShop));
       setStatus("ready");
     });
   }, []);
@@ -63,11 +65,28 @@ export default function Settings() {
     setStatus("saving");
     setError("");
     try {
-      await saveSettings({ ...intro, questions });
+      await saveSettings({ ...intro, showIceCreamShop, questions });
       setStatus("saved");
     } catch (err) {
       console.error(err);
       setError("We couldn't save the settings. Check Appwrite permissions.");
+      setStatus("ready");
+    }
+  }
+
+  async function toggleShopVisibility() {
+    const nextValue = !showIceCreamShop;
+    setShowIceCreamShop(nextValue);
+    setStatus("saving");
+    setError("");
+
+    try {
+      await saveSettings({ ...intro, showIceCreamShop: nextValue, questions });
+      setStatus("saved");
+    } catch (err) {
+      console.error(err);
+      setShowIceCreamShop(!nextValue);
+      setError("We couldn't update Marry’s Shop. Check Appwrite permissions.");
       setStatus("ready");
     }
   }
@@ -84,6 +103,43 @@ export default function Settings() {
       </header>
 
       <form onSubmit={handleSave} className="space-y-5">
+        <section className="bg-white rounded-3xl shadow-soft p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="font-display font-bold text-lg text-ink">Marry’s Ice Cream Shop</h2>
+              <p className="mt-1 text-sm text-mist">
+                Show the shop button and allow visitors to open the animated ice cream game.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={showIceCreamShop}
+              onClick={toggleShopVisibility}
+              disabled={status === "saving"}
+              className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${
+                showIceCreamShop ? "bg-calm" : "bg-ink/20"
+              } disabled:cursor-wait disabled:opacity-60`}
+            >
+              <span
+                className={`absolute left-1 top-1 h-6 w-6 rounded-full bg-white shadow transition-transform ${
+                  showIceCreamShop ? "translate-x-6" : "translate-x-0"
+                }`}
+              />
+              <span className="sr-only">
+                {showIceCreamShop ? "Hide Marry’s Shop" : "Show Marry’s Shop"}
+              </span>
+            </button>
+          </div>
+          <p className={`mt-3 text-xs font-bold uppercase tracking-wider ${showIceCreamShop ? "text-calm" : "text-mist"}`}>
+            {status === "saving"
+              ? "Updating shop…"
+              : showIceCreamShop
+                ? "Shop is visible"
+                : "Shop is hidden"}
+          </p>
+        </section>
+
         <section className="bg-white rounded-3xl shadow-soft p-5">
           <label className="block mb-4">
             <span className="text-mist text-xs uppercase tracking-wide font-medium">Main heading</span>

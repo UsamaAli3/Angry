@@ -5,7 +5,7 @@ import { subscribeToAuth } from "../auth.js";
 const linkBase =
   "flex-1 sm:flex-none text-center px-4 py-2.5 rounded-2xl font-display font-semibold text-sm sm:text-base transition-colors";
 
-export default function NavBar() {
+export default function NavBar({ showIceCreamShop }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => subscribeToAuth((user) => setIsAdmin(Boolean(user))), []);
@@ -24,7 +24,7 @@ export default function NavBar() {
         >
           Check In
         </NavLink>
-        <NavLink
+        {showIceCreamShop && <NavLink
           to="/ice-cream"
           className={({ isActive }) =>
             `${linkBase} whitespace-nowrap ${
@@ -33,7 +33,7 @@ export default function NavBar() {
           }
         >
           🍦 Marry’s Shop
-        </NavLink>
+        </NavLink>}
         {isAdmin && <NavLink
           to="/records"
           className={({ isActive }) =>

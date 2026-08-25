@@ -63,13 +63,16 @@ export async function getSettings() {
   const defaultSettings = {
     title: "How are you feeling?",
     description: "Choose the answers that feel closest. You don't need to type anything.",
+    showIceCreamShop: false,
     questions: defaultQuestions,
   };
   if (!settingsCollectionId) return defaultSettings;
   try {
     const document = await databases.getDocument(databaseId, settingsCollectionId, "global-settings");
     const config = JSON.parse(document.config);
-    return Array.isArray(config) ? { ...defaultSettings, questions: config } : config;
+    return Array.isArray(config)
+      ? { ...defaultSettings, questions: config }
+      : { ...defaultSettings, ...config };
   } catch (err) {
     console.error("Failed to load settings:", err);
     return defaultSettings;
@@ -80,6 +83,7 @@ export async function saveSettings(settings) {
   await databases.updateDocument(databaseId, settingsCollectionId, "global-settings", {
     config: JSON.stringify(settings),
   });
+  window.dispatchEvent(new CustomEvent("settings-changed", { detail: settings }));
 }
 
 export async function recordVisit() {
