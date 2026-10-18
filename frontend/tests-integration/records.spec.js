@@ -88,3 +88,51 @@ test("a failed check-in reader does not hide successful website visits", async (
   await expect(page.getByText("Seed platform 0", { exact: true })).toBeVisible();
   await expect(page.getByRole("tab", { name: /4 Website Visits/ })).toBeVisible();
 });
+
+test("single and bulk deletion require confirmation and preserve other record types", async ({ page, request }) => {
+  await request.post("http://127.0.0.1:5181/__test/reset", { data: { seedVisits: 125 } });
+  await page.goto("/invitation");
+  await page.getByRole("button", { name: "Yes", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Where should I send the next link?" })).toBeVisible();
+  await expect.poll(async () => (await state(request)).answers).toBe(2); // Permission and private link.
+  await page.goto("/records");
+  await expect(page.getByRole("button", { name: "Delete visit", exact: true }).first()).toBeVisible();
+  const before = (await state(request)).visits;
+  await page.getByRole("button", { name: "Delete visit", exact: true }).first().click();
+  await page.getByRole("dialog").getByRole("button", { name: "Cancel", exact: true }).click();
+  expect((await state(request)).visits).toBe(before);
+  await page.getByRole("button", { name: "Delete visit", exact: true }).first().click();
+  await page.getByRole("dialog").getByRole("button", { name: "Delete permanently" }).click();
+  await expect.poll(async () => (await state(request)).visits).toBe(before - 1);
+  expect((await state(request)).answers).toBe(2);
+  await page.getByRole("button", { name: "Delete all visits", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Delete permanently" }).click();
+  await expect.poll(async () => (await state(request)).visits).toBe(0);
+  expect((await state(request)).answers).toBe(2);
+  await page.getByRole("button", { name: "Delete invitation", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Delete permanently" }).click();
+  await expect.poll(async () => (await state(request)).answers).toBe(0);
+  await expect(page.getByText("No invitation responses yet.", { exact: false })).toBeVisible();
+});
+
+test("delete all clears all record types but failed reads never begin deletion", async ({ page, request }) => {
+  await request.post("http://127.0.0.1:5181/__test/reset", { data: { seedVisits: 3, failCheckinReads: true } });
+  await page.goto("/records");
+  await page.getByRole("button", { name: "Delete all records", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Delete permanently" }).click();
+  await expect(page.getByRole("dialog").getByRole("alert")).toContainText("Failed to load check-ins");
+  expect((await state(request)).visits).toBe(4);
+  await page.getByRole("dialog").getByRole("button", { name: "Cancel", exact: true }).click();
+  await request.post("http://127.0.0.1:5181/__test/reset", { data: { seedVisits: 105, seedCheckins: 2 } });
+  await page.goto("/invitation");
+  await page.getByRole("button", { name: "No", exact: true }).click();
+  await expect(page.getByText("Your answer has been sent.")).toBeVisible();
+  await page.goto("/records");
+  await expect(page.getByRole("heading", { name: "Declined", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Delete all records", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Delete permanently" }).click();
+  await expect.poll(async () => (await state(request)).visits).toBe(0);
+  await expect.poll(async () => (await state(request)).answers).toBe(0);
+  await expect(page.getByRole("tab", { name: /0 Website Visits/ })).toBeVisible();
+  expect((await state(request)).checkins).toBe(0);
+});

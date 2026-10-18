@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getInvitationResponses, setFollowupAccess } from "../data/invitations.js";
 import { readFollowupToken } from "../lib/followup.js";
+import DeleteRecordsButton from "./DeleteRecordsButton.jsx";
 
 const choiceLabels = { yes: "Yes, ask me", no: "No, thank you", coffee: "Coffee", dinner: "Dinner", maybe: "Maybe another time" };
 
@@ -92,6 +93,7 @@ export default function InvitationRecords() {
     {loading && <p role="status" className="py-8 text-center text-white/60">Loading invitation responses…</p>}
     {error && <p role="alert" className="rounded-2xl bg-bloom/10 p-4 text-bloom">{error}</p>}
     {accessError && <p role="alert" className="mb-4 rounded-2xl bg-bloom/10 p-4 text-bloom">{accessError}</p>}
+    {!loading && !error && sessions.length > 0 && <div className="mb-4"><DeleteRecordsButton scope="invitations" label="Delete all invitations" message="Delete all invitation answers, contact details, and private links? Their follow-up links will stop working. This cannot be undone." /></div>}
     <p role="status" className="mb-3 text-sm text-calm">{copyMessage}</p>
     {!loading && !error && !sessions.length && <p className="rounded-2xl bg-white/5 p-6 text-white/70">No invitation responses yet. Submitted answers and any shared contact details will appear here.</p>}
     {!loading && !error && <ul className="space-y-5">{sessions.map(session => {
@@ -120,6 +122,7 @@ export default function InvitationRecords() {
           <Field label="Contact method" value={values.contact_method} />
           <div className="sm:col-span-2"><Field label="Contact details" value={values.contact} /></div>
         </dl>
+        <div className="mt-5"><DeleteRecordsButton scope="invitations" sessionId={session.reference} label="Delete invitation" message="Delete this invitation's answers, contact details, and private link? Its follow-up link will stop working. This cannot be undone." /></div>
         {nextLink && <div className="mt-5 rounded-2xl bg-cloud p-4 text-sm text-ink"><p>{ready ? "Her copied link can now open the coffee-or-dinner question." : "She can copy her link now, but it stays closed until you allow it here. Time passing will not open it automatically."}</p><div className="mt-3 flex flex-wrap gap-3"><button type="button" disabled={changingLink !== null} onClick={() => changeAccess(session.reference, !ready)} className={`rounded-xl px-4 py-2 font-semibold text-white ${ready ? "bg-bloomDark" : "bg-calm"} disabled:opacity-50`}>{changingLink === session.reference ? "Updating…" : ready ? "Block next question" : "Allow next question"}</button><button type="button" onClick={() => copyContact(nextLink)} className="rounded-xl border border-ink/20 px-4 py-2 font-semibold">Copy next question link</button></div></div>}
         {contact && <div className="mt-5 flex flex-wrap gap-3">
           {href && <a href={href} {...(href.startsWith("https:") ? { target: "_blank", rel: "noopener noreferrer" } : {})} className="rounded-xl bg-calm px-4 py-2 text-sm font-semibold text-white">{method === "Email" ? "Write email" : method === "Phone" ? "Call" : `Open ${method}`}</a>}

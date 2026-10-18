@@ -26,9 +26,13 @@ const server = createServer(async (req, res) => {
       const created_at = new Date(Date.UTC(2026, 0, 1, 0, index)).toISOString();
       records.set(`seed-${index}`, { $id: `seed-${index}`, $createdAt: created_at, created_at, collection: "test-checkins", event_type: "visit", platform: `Seed platform ${index}` });
     }
+    for (let index = 0; index < (body.seedCheckins || 0); index++) {
+      const created_at = new Date(Date.UTC(2026, 0, 1, 0, index)).toISOString();
+      records.set(`checkin-${index}`, { $id: `checkin-${index}`, $createdAt: created_at, created_at, collection: "test-checkins", event_type: "checkin", what_happened: "Test check-in" });
+    }
     return send(200, { reset: true });
   }
-  if (url.pathname === "/__test/state") return send(200, { visits: [...records.values()].filter(doc => doc.event_type === "visit").length, answers: [...records.values()].filter(doc => doc.collection === "test-invitations").length, visitAttempts });
+  if (url.pathname === "/__test/state") return send(200, { visits: [...records.values()].filter(doc => doc.event_type === "visit").length, checkins: [...records.values()].filter(doc => doc.event_type === "checkin").length, answers: [...records.values()].filter(doc => doc.collection === "test-invitations").length, visitAttempts });
   if (url.pathname === "/v1/account") return send(200, { $id: "test-admin", email: "admin@example.test" });
   if (url.pathname === "/v1/account/jwts" && req.method === "POST") return send(201, { jwt: "integration-admin-jwt" });
   if (url.pathname.endsWith("/global-settings")) return send(200, { config: JSON.stringify({ title: "Mood check-in", description: "How are you?", showIceCreamShop: false }) });
@@ -48,6 +52,7 @@ const server = createServer(async (req, res) => {
   }
   if (id) {
     if (!records.has(id)) return send(404, { message: "Not found" });
+    if (req.method === "DELETE") { records.delete(id); return send(204, {}); }
     if (req.method === "PATCH") {
       if (req.headers["x-appwrite-key"] !== "integration-only-key") return send(401, { message: "Server key required" });
       Object.assign(records.get(id), body.data);

@@ -12,6 +12,7 @@ import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import { questions } from "../data/questions.js";
 import InvitationRecords from "../components/InvitationRecords.jsx";
 import WebsiteVisits from "../components/WebsiteVisits.jsx";
+import DeleteRecordsButton from "../components/DeleteRecordsButton.jsx";
 
 function formatTimestamp(isoString) {
   const date = new Date(isoString);
@@ -33,6 +34,7 @@ export default function MyRecords({ visitSaveError = "" }) {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [deleteError, setDeleteError] = useState("");
   const [recordErrors, setRecordErrors] = useState({ checkins: "", visits: "" });
   const loadSequence = useRef(0);
   const [visitCount, setVisitCount] = useState(0);
@@ -70,6 +72,12 @@ export default function MyRecords({ visitSaveError = "" }) {
     window.addEventListener("focus", refresh);
     const timer = window.setInterval(refresh, 30000);
     return () => { window.removeEventListener("records-changed", refresh); window.removeEventListener("focus", refresh); window.clearInterval(timer); };
+  }, []);
+
+  useEffect(() => {
+    const report = event => setDeleteError(event.detail);
+    window.addEventListener("records-delete-error", report);
+    return () => window.removeEventListener("records-delete-error", report);
   }, []);
 
   async function confirmDeleteOne() {
@@ -159,12 +167,14 @@ export default function MyRecords({ visitSaveError = "" }) {
             onClick={() => setClearAllOpen(true)}
             className="shrink-0 px-3.5 py-2 rounded-2xl font-display font-semibold text-sm text-bloomDark bg-bloom/10 hover:bg-bloom/20 transition-colors"
           >
-            Clear All Records
+            Delete all check-ins
           </button>
         )}
       </header>
 
       {visitSaveError && <p role="alert" className="mb-4 rounded-2xl bg-bloom/10 p-4 text-sm text-bloom">{visitSaveError}</p>}
+      {deleteError && <p role="alert" className="mb-4 rounded-2xl bg-rose-100 p-4 text-sm text-rose-900">{deleteError}<button type="button" className="ml-3 underline" onClick={() => setDeleteError("")}>Dismiss</button></p>}
+      <div className="mb-4"><DeleteRecordsButton scope="all" label="Delete all records" disabled={loading} message="Delete ALL check-ins, invitation answers, contact details, private links, and website visits? Invitation links will stop working. This cannot be undone." /></div>
       <div className="flex justify-end gap-4 mb-4">
         <button type="button" onClick={() => window.dispatchEvent(new Event("records-changed"))} disabled={loading} className="text-calm text-sm font-medium disabled:opacity-50">Refresh all records</button>
         <button

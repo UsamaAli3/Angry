@@ -5,6 +5,7 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
   busy = false,
+  error = "",
 }) {
   return (
     <div
@@ -14,6 +15,7 @@ export default function ConfirmDialog({
     >
       <div className="w-full sm:max-w-sm bg-white rounded-3xl shadow-soft p-6">
         <p className="text-ink font-medium text-[15px] sm:text-base mb-6">{message}</p>
+        {error && <p role="alert" className="mb-4 text-sm text-rose-800">{error}</p>}
         <div className="flex gap-3">
           <button
             type="button"

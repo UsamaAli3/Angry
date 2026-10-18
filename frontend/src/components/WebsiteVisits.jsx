@@ -1,4 +1,5 @@
 import { useState } from "react";
+import DeleteRecordsButton from "./DeleteRecordsButton.jsx";
 import { currentDeviceId, deviceColorIndex, readOwnedDevices, saveOwnedDevices, visitDeviceKey } from "../lib/visit-devices.js";
 
 const colors = [
@@ -28,6 +29,7 @@ export default function WebsiteVisits({ visits, formatTimestamp }) {
       </button>
     </div>
     {error && <p role="alert" className="mb-4 rounded-xl bg-rose-100 p-3 text-rose-950">{error}</p>}
+    {visits.length > 0 && <div className="mb-4"><DeleteRecordsButton scope="visits" label="Delete all visits" message="Delete all saved website visits? Check-ins and invitations will stay. This cannot be undone." /></div>}
     {!visits.length ? <p className="text-sm text-mist">No visit details yet.</p> : <ul className="space-y-3">
       {visits.map(visit => {
         const key = visitDeviceKey(visit), mine = owned.includes(key), thisBrowser = key === current;
@@ -40,6 +42,7 @@ export default function WebsiteVisits({ visits, formatTimestamp }) {
             <button type="button" aria-pressed={mine} onClick={() => toggle(key)} className="rounded-xl border border-current px-3 py-2 font-semibold hover:bg-white/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current">{mine ? "Unmark as mine" : "Mark as mine"}</button>
           </div>
           <p className="mb-3 font-semibold">{formatTimestamp(visit.created_at || visit.$createdAt)}</p>
+          <div className="mb-3"><DeleteRecordsButton scope="visits" id={visit.$id} label="Delete visit" message="Delete this website visit permanently?" /></div>
           {[["Device", visit.device_info], ["Platform", visit.platform], ["Language", visit.language], ["Timezone", visit.timezone], ["Screen", visit.screen_size], ["Location", visit.location_info], ["Referrer", visit.referrer]].map(([label, value]) => <p key={label} className="mb-1 break-words"><span className="font-semibold">{label}: </span><span>{value || "Unknown"}</span></p>)}
         </li>;
       })}
