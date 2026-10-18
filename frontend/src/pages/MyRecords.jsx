@@ -11,6 +11,7 @@ import { logout } from "../auth.js";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import { questions } from "../data/questions.js";
 import InvitationRecords from "../components/InvitationRecords.jsx";
+import WebsiteVisits from "../components/WebsiteVisits.jsx";
 
 function formatTimestamp(isoString) {
   const date = new Date(isoString);
@@ -321,27 +322,7 @@ export default function MyRecords({ visitSaveError = "" }) {
       )}
 
       {!loading && !recordErrors.visits && showVisits && (
-        <section className="mt-8" aria-label="Website visit records">
-          <h2 className="font-display font-bold text-xl text-white mb-3">Website Visits</h2>
-          {visits.length === 0 ? (
-            <p className="text-mist text-sm">No visit details yet.</p>
-          ) : (
-            <ul className="space-y-3">
-              {visits.map((visit) => (
-                <li key={visit.$id} className="bg-white rounded-3xl shadow-soft p-5 text-sm">
-                  <p className="text-ink font-semibold mb-3">{formatTimestamp(visit.created_at || visit.$createdAt)}</p>
-                  <VisitField label="Device" value={visit.device_info} />
-                  <VisitField label="Platform" value={visit.platform} />
-                  <VisitField label="Language" value={visit.language} />
-                  <VisitField label="Timezone" value={visit.timezone} />
-                  <VisitField label="Screen" value={visit.screen_size} />
-                  <VisitField label="Location" value={visit.location_info} />
-                  <VisitField label="Referrer" value={visit.referrer} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        <WebsiteVisits visits={visits} formatTimestamp={formatTimestamp} />
       )}
 
       {pendingDeleteId !== null && (
@@ -373,14 +354,5 @@ function RecordField({ label, value }) {
       <p className="text-mist text-xs uppercase tracking-wide font-medium mb-0.5">{label}</p>
       <p className="text-ink font-medium text-[15px]">{value || "Not answered yet"}</p>
     </div>
-  );
-}
-
-function VisitField({ label, value }) {
-  return (
-    <p className="mb-1 break-words">
-      <span className="text-mist font-medium">{label}: </span>
-      <span className="text-ink">{value || "Unknown"}</span>
-    </p>
   );
 }

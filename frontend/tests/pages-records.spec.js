@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-async function mockApp(page, { responses = [], failSave = false } = {}) {
+async function mockApp(page, { responses = [], visits = [], failSave = false } = {}) {
   let settings = { title: "Mood check-in", description: "Choose how you feel.", showIceCreamShop: false, customSetting: "preserve-me" };
   const saves = [];
   const invitationReads = [];
@@ -21,7 +21,7 @@ async function mockApp(page, { responses = [], failSave = false } = {}) {
       const shared = Boolean(process.env.INVITATION_TEST_SHARED);
       const queries = [...url.searchParams.values()].join(" ");
       const isInvitations = shared ? queries.includes('"invitation"') : url.pathname.includes("test-invitations");
-      if (!isInvitations) return route.fulfill({ json: { documents: [], total: 0 } });
+      if (!isInvitations) return route.fulfill({ json: { documents: visits, total: visits.length } });
       invitationReads.push(queries);
       const offset = queries.includes("cursorAfter") ? 100 : 0;
       const docs = responses.slice(offset, offset + 100).map(doc => shared ? {
@@ -108,4 +108,32 @@ test("My Records explains missing saving configuration instead of leaving an une
   await expect(page.getByRole("alert")).toContainText("New answers cannot be saved yet");
   await expect(page.getByRole("alert")).toContainText("APPWRITE_ADMIN_USER_ID");
   await expect(page.getByText("No invitation responses yet.", { exact: false })).toBeVisible();
+});
+
+test("device labels persist, group the same browser, and leave other visitors colorful", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("mood-checkin-device", "my-browser"));
+  const visits = [
+    { $id: "mine-1", what_happened: "device:my-browser" },
+    { $id: "mine-2", what_happened: "device:my-browser" },
+    { $id: "other", what_happened: "device:other-browser" },
+    { $id: "legacy" },
+  ].map(row => ({ ...row, event_type: "visit", created_at: "2026-10-18T10:00:00.000Z" }));
+  await mockApp(page, { visits });
+  await page.goto("/records?tab=visits");
+  const ownVisits = page.locator('li[data-visit-device="device:my-browser"]');
+  const other = page.locator('li[data-visit-device="device:other-browser"]');
+  await expect(ownVisits).toHaveCount(2);
+  const visitorColor = await other.getAttribute("class");
+  await page.getByRole("button", { name: "Mark this browser as mine", exact: true }).click();
+  await expect(ownVisits.getByText("My device", { exact: true })).toHaveCount(2);
+  await expect(other.getByText("Visitor", { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(ownVisits.getByText("My device", { exact: true })).toHaveCount(2);
+  await expect(other).toHaveAttribute("class", visitorColor);
+  await page.getByRole("button", { name: "Unmark this browser", exact: true }).click();
+  await expect(ownVisits.getByText("Visitor", { exact: true })).toHaveCount(2);
+  const legacy = page.locator('li[data-visit-device="visit:legacy"]');
+  await legacy.getByRole("button", { name: "Mark as mine", exact: true }).click();
+  await expect(legacy.getByText("My device", { exact: true })).toBeVisible();
+  await expect(other.getByText("Visitor", { exact: true })).toBeVisible();
 });

@@ -6,6 +6,7 @@
 import { Query } from "appwrite";
 import { ID, Permission, Role, appwriteConfig, databases } from "../appwrite.js";
 import { questions as defaultQuestions } from "./questions.js";
+import { currentDeviceId } from "../lib/visit-devices.js";
 
 const { databaseId, collectionId, settingsCollectionId } = appwriteConfig;
 
@@ -93,6 +94,7 @@ export async function recordVisit(id = ID.unique()) {
     const visit = {
       created_at: new Date().toISOString(),
       event_type: "visit",
+      what_happened: `device:${currentDeviceId()}`,
       device_info: navigator.userAgent,
       platform: navigator.platform || "Unknown",
       language: navigator.language || "Unknown",
