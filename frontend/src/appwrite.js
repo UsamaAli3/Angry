@@ -12,4 +12,5 @@ export const appwriteConfig = {
   databaseId: import.meta.env.VITE_APPWRITE_DATABASE_ID,
   collectionId: import.meta.env.VITE_APPWRITE_COLLECTION_ID,
   settingsCollectionId: import.meta.env.VITE_APPWRITE_SETTINGS_COLLECTION_ID,
+  invitationCollectionId: import.meta.env.VITE_APPWRITE_INVITATION_COLLECTION_ID,
 };

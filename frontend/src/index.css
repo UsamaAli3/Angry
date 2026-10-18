@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+.invitation-title {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.invitation-label {
+  @apply block text-sm font-medium text-[#665354];
+}
+
+.invitation-input {
+  @apply mt-2 block min-h-12 w-full min-w-0 rounded-xl border border-[#d9c7c1] bg-[#fffdf9] px-3 py-3 text-sm text-[#49363c] outline-none focus:border-[#a65c70] focus:ring-2 focus:ring-[#a65c70]/30;
+}
+
+.invitation-glow {
+  background:
+    radial-gradient(ellipse at 12% 16%, #ead2c580, transparent 48%),
+    radial-gradient(ellipse at 90% 80%, #eacfd780, transparent 45%),
+    #f8f2eb;
+}
+
+.invitation-page ::selection {
+  background: #edcbd3;
+  color: #49363c;
+}
+
 html,
 body,
 #root {

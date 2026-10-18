@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { getSettings, saveSettings } from "../data/api.js";
+import { getPageVisibility, pages } from "../data/pages.js";
 
 export default function Settings() {
   const [questions, setQuestions] = useState([]);
   const [intro, setIntro] = useState({ title: "", description: "" });
-  const [showIceCreamShop, setShowIceCreamShop] = useState(false);
+  const [pageVisibility, setPageVisibility] = useState(getPageVisibility());
+  const [otherSettings, setOtherSettings] = useState({});
   const [status, setStatus] = useState("loading");
   const [error, setError] = useState("");
 
@@ -12,7 +14,8 @@ export default function Settings() {
     getSettings().then((value) => {
       setQuestions(value.questions);
       setIntro({ title: value.title, description: value.description });
-      setShowIceCreamShop(Boolean(value.showIceCreamShop));
+      setPageVisibility(getPageVisibility(value));
+      setOtherSettings(value);
       setStatus("ready");
     });
   }, []);
@@ -65,7 +68,7 @@ export default function Settings() {
     setStatus("saving");
     setError("");
     try {
-      await saveSettings({ ...intro, showIceCreamShop, questions });
+      await saveSettings({ ...otherSettings, ...intro, pageVisibility, showIceCreamShop: pageVisibility.iceCream, questions });
       setStatus("saved");
     } catch (err) {
       console.error(err);
@@ -74,19 +77,20 @@ export default function Settings() {
     }
   }
 
-  async function toggleShopVisibility() {
-    const nextValue = !showIceCreamShop;
-    setShowIceCreamShop(nextValue);
+  async function togglePageVisibility(pageId) {
+    const previous = pageVisibility;
+    const next = { ...pageVisibility, [pageId]: !pageVisibility[pageId] };
+    setPageVisibility(next);
     setStatus("saving");
     setError("");
 
     try {
-      await saveSettings({ ...intro, showIceCreamShop: nextValue, questions });
+      await saveSettings({ ...otherSettings, ...intro, pageVisibility: next, showIceCreamShop: next.iceCream, questions });
       setStatus("saved");
     } catch (err) {
       console.error(err);
-      setShowIceCreamShop(!nextValue);
-      setError("We couldn't update Marry’s Shop. Check Appwrite permissions.");
+      setPageVisibility(previous);
+      setError("We couldn't update page visibility. Check Appwrite permissions.");
       setStatus("ready");
     }
   }
@@ -98,46 +102,20 @@ export default function Settings() {
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
       <header className="mb-7">
-        <h1 className="font-display font-bold text-2xl text-white mb-1">Check-In Settings</h1>
-        <p className="text-white/60 text-sm">Customize the headers and answer choices visitors see.</p>
+        <h1 className="font-display font-bold text-2xl text-white mb-1">Page & Check-In Settings</h1>
+        <p className="text-white/60 text-sm">Show or hide pages and customize your check-in questions.</p>
       </header>
 
       <form onSubmit={handleSave} className="space-y-5">
-        <section className="bg-white rounded-3xl shadow-soft p-5">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="font-display font-bold text-lg text-ink">Marry’s Ice Cream Shop</h2>
-              <p className="mt-1 text-sm text-mist">
-                Show the shop button and allow visitors to open the animated ice cream game.
-              </p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={showIceCreamShop}
-              onClick={toggleShopVisibility}
-              disabled={status === "saving"}
-              className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${
-                showIceCreamShop ? "bg-calm" : "bg-ink/20"
-              } disabled:cursor-wait disabled:opacity-60`}
-            >
-              <span
-                className={`absolute left-1 top-1 h-6 w-6 rounded-full bg-white shadow transition-transform ${
-                  showIceCreamShop ? "translate-x-6" : "translate-x-0"
-                }`}
-              />
-              <span className="sr-only">
-                {showIceCreamShop ? "Hide Marry’s Shop" : "Show Marry’s Shop"}
-              </span>
-            </button>
+        <section className="bg-white rounded-3xl shadow-soft p-5" aria-labelledby="page-visibility-heading">
+          <h2 id="page-visibility-heading" className="font-display font-bold text-xl text-ink">Page visibility</h2>
+          <p className="mt-2 mb-5 text-sm text-mist">Switches save immediately. Hidden public pages cannot be opened by their links. Admin switches hide navigation links; signed-in admins can still open /records, /invitation-responses and /settings directly.</p>
+          <div className="divide-y divide-ink/10">
+          {pages.map(page => <div key={page.id} className="flex items-center justify-between gap-4 py-4">
+            <div><h3 className="font-display font-bold text-lg text-ink">{page.title}</h3><p className="mt-1 text-sm text-mist">{page.description}</p><p className="mt-2 text-xs font-semibold uppercase tracking-wide text-mist">{pageVisibility[page.id] ? "Visible" : "Hidden"}{page.admin ? " · Admin only" : ""}</p></div>
+            <button type="button" role="switch" aria-label={page.title} aria-checked={pageVisibility[page.id]} disabled={status === "saving"} onClick={() => togglePageVisibility(page.id)} className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${pageVisibility[page.id] ? "bg-calm" : "bg-ink/20"} disabled:cursor-wait disabled:opacity-60`}><span className={`absolute left-1 top-1 h-6 w-6 rounded-full bg-white shadow transition-transform ${pageVisibility[page.id] ? "translate-x-6" : "translate-x-0"}`} /></button>
+          </div>)}
           </div>
-          <p className={`mt-3 text-xs font-bold uppercase tracking-wider ${showIceCreamShop ? "text-calm" : "text-mist"}`}>
-            {status === "saving"
-              ? "Updating shop…"
-              : showIceCreamShop
-                ? "Shop is visible"
-                : "Shop is hidden"}
-          </p>
         </section>
 
         <section className="bg-white rounded-3xl shadow-soft p-5">

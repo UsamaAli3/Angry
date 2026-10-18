@@ -23,3 +23,8 @@ npm-debug.log*
 *.log
 
 .vercel
+
+# Browser test artifacts
+frontend/test-results/
+frontend/playwright-report/
+frontend/vite.config.js.timestamp-*.mjs

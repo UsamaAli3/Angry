@@ -63,7 +63,9 @@ export async function getSettings() {
   const defaultSettings = {
     title: "How are you feeling?",
     description: "Choose the answers that feel closest. You don't need to type anything.",
-    showIceCreamShop: false,
+    // Existing settings documents predate this option, so keep the shop
+    // visible until an admin explicitly turns it off.
+    showIceCreamShop: true,
     questions: defaultQuestions,
   };
   if (!settingsCollectionId) return defaultSettings;
@@ -86,9 +88,8 @@ export async function saveSettings(settings) {
   window.dispatchEvent(new CustomEvent("settings-changed", { detail: settings }));
 }
 
-export async function recordVisit() {
+export async function recordVisit(id = ID.unique()) {
   try {
-    const locationInfo = await getLocationInfo();
     const visit = {
       created_at: new Date().toISOString(),
       event_type: "visit",
@@ -98,43 +99,44 @@ export async function recordVisit() {
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown",
       screen_size: `${window.screen.width}x${window.screen.height}`,
       referrer: document.referrer || "Direct visit",
-      location_info: locationInfo,
+      location_info: "Not collected",
     };
     await databases.createDocument(
       databaseId,
       collectionId,
-      ID.unique(),
+      id,
       visit,
-      [Permission.write(Role.any())],
+      [],
     );
+    window.dispatchEvent(new Event("records-changed"));
+    return { success: true };
   } catch (err) {
+    if (err.code === 409 && err.type === "document_already_exists") return { success: true };
     console.error("Failed to record visit:", err);
+    throw new Error("This page's visit couldn't be saved. Check your connection and Appwrite collection Create permission.");
   }
 }
 
-function getLocationInfo() {
-  if (!navigator.geolocation) return Promise.resolve("Location unavailable");
-  return new Promise((resolve) => {
-    const timeout = setTimeout(() => resolve("Location permission not granted"), 3000);
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        clearTimeout(timeout);
-        resolve(`${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`);
-      },
-      () => {
-        clearTimeout(timeout);
-        resolve("Location permission not granted");
-      },
-      { timeout: 2500, maximumAge: 300000 },
-    );
-  });
+async function listAllCollectionDocuments(queries = []) {
+  const documents = [];
+  let cursor;
+  while (true) {
+    const response = await databases.listDocuments(databaseId, collectionId, [
+      ...queries, Query.orderDesc("$createdAt"), Query.limit(100),
+      ...(cursor ? [Query.cursorAfter(cursor)] : []),
+    ]);
+    documents.push(...response.documents);
+    const next = response.documents.at(-1)?.$id;
+    if (response.documents.length < 100 || !next || next === cursor) return documents;
+    cursor = next;
+  }
 }
 
 export async function getVisits() {
-  const response = await databases.listDocuments(databaseId, collectionId, [Query.limit(100)]);
-  return response.documents
+  const documents = await listAllCollectionDocuments([Query.equal("event_type", "visit")]);
+  return documents
     .filter((document) => document.event_type === "visit")
-    .sort((left, right) => right.created_at.localeCompare(left.created_at));
+    .sort((left, right) => (right.created_at || right.$createdAt || "").localeCompare(left.created_at || left.$createdAt || ""));
 }
 
 // Updates an in-progress check-in in place (used while someone is still
@@ -174,10 +176,10 @@ export async function updateCheckin(
 
 export async function getCheckins() {
   try {
-    const response = await databases.listDocuments(databaseId, collectionId, [Query.limit(100)]);
-    const checkins = response.documents
+    const documents = await listAllCollectionDocuments();
+    const checkins = documents
       .filter((document) => !document.event_type || document.event_type === "checkin")
-      .sort((left, right) => right.created_at.localeCompare(left.created_at))
+      .sort((left, right) => (right.created_at || right.$createdAt || "").localeCompare(left.created_at || left.$createdAt || ""))
       .map((document) => {
       const data = document;
       return {
@@ -200,8 +202,8 @@ export async function getCheckins() {
 
 export async function getVisitCount() {
   try {
-    const response = await databases.listDocuments(databaseId, collectionId, [Query.limit(100)]);
-    return response.documents.filter((document) => document.event_type === "visit").length;
+    const response = await databases.listDocuments(databaseId, collectionId, [Query.equal("event_type", "visit"), Query.limit(1)]);
+    return response.total;
   } catch (err) {
     console.error("Failed to load visit count:", err);
     throw new Error("Failed to load visitor count.");
@@ -220,9 +222,9 @@ export async function deleteCheckin(id) {
 
 export async function deleteAllCheckins() {
   try {
-    const response = await databases.listDocuments(databaseId, collectionId, [Query.limit(100)]);
+    const documents = await listAllCollectionDocuments();
     await Promise.all(
-      response.documents
+      documents
         .filter((document) => !document.event_type || document.event_type === "checkin")
         .map((document) =>
         databases.deleteDocument(databaseId, collectionId, document.$id),

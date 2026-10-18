@@ -25,6 +25,14 @@ VITE_APPWRITE_COLLECTION_ID=your-collection-id
 
 ## Run locally
 
+The standalone invitation page is at `/invitation`; admin responses are at
+`/invitation-responses`. See [invitation setup](docs/invitation-setup.md) for the
+Appwrite storage options and permissions. Invitations use the existing check-in
+collection by default; a separate collection is optional.
+Invitation saves run through a Node API and require server-only
+`APPWRITE_API_KEY` and `APPWRITE_ADMIN_USER_ID`. The API checks private collection
+permissions before saving; use the separate collection for server-only writes.
+
 ```
 cd frontend
 npm install

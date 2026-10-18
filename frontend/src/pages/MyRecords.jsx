@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   getCheckins,
-  getVisitCount,
   getVisits,
   updateCheckin,
   deleteCheckin,
@@ -10,9 +10,11 @@ import {
 import { logout } from "../auth.js";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import { questions } from "../data/questions.js";
+import InvitationRecords from "../components/InvitationRecords.jsx";
 
 function formatTimestamp(isoString) {
   const date = new Date(isoString);
+  if (!Number.isFinite(date.getTime())) return "Time unavailable";
   const datePart = date.toLocaleDateString(undefined, {
     year: "numeric",
     month: "long",
@@ -25,13 +27,19 @@ function formatTimestamp(isoString) {
   return `${datePart} — ${timePart}`;
 }
 
-export default function MyRecords() {
+export default function MyRecords({ visitSaveError = "" }) {
+  const [searchParams] = useSearchParams();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [recordErrors, setRecordErrors] = useState({ checkins: "", visits: "" });
+  const loadSequence = useRef(0);
   const [visitCount, setVisitCount] = useState(0);
   const [visits, setVisits] = useState([]);
-  const [activeTab, setActiveTab] = useState("checkins");
+  const [activeTab, setActiveTab] = useState(["checkins", "visits", "invitations"].includes(searchParams.get("tab")) ? searchParams.get("tab") : "all");
+  const showInvitations = activeTab === "all" || activeTab === "invitations";
+  const showCheckins = activeTab === "all" || activeTab === "checkins";
+  const showVisits = activeTab === "all" || activeTab === "visits";
 
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [clearAllOpen, setClearAllOpen] = useState(false);
@@ -40,27 +48,27 @@ export default function MyRecords() {
   const [editAnswers, setEditAnswers] = useState({});
 
   async function loadRecords() {
+    const sequence = ++loadSequence.current;
     setLoading(true);
     setLoadError("");
-    try {
-      const [{ checkins }, count, visitDetails] = await Promise.all([
-        getCheckins(),
-        getVisitCount(),
-        getVisits(),
-      ]);
-      setRecords(checkins);
-      setVisitCount(count);
-      setVisits(visitDetails);
-    } catch (err) {
-      console.error(err);
-      setLoadError("We couldn't load your records. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    const [checkinResult, visitResult] = await Promise.allSettled([getCheckins(), getVisits()]);
+    if (sequence !== loadSequence.current) return;
+    const errors = { checkins: "", visits: "" };
+    if (checkinResult.status === "fulfilled") setRecords(checkinResult.value.checkins);
+    else errors.checkins = "Check-ins couldn't be loaded. Refresh to retry.";
+    if (visitResult.status === "fulfilled") { setVisits(visitResult.value); setVisitCount(visitResult.value.length); }
+    else errors.visits = "Website visits couldn't be loaded. Check your admin Read permission and refresh to retry.";
+    setRecordErrors(errors);
+    setLoading(false);
   }
 
   useEffect(() => {
     loadRecords();
+    const refresh = () => { if (document.visibilityState !== "hidden") void loadRecords(); };
+    window.addEventListener("records-changed", refresh);
+    window.addEventListener("focus", refresh);
+    const timer = window.setInterval(refresh, 30000);
+    return () => { window.removeEventListener("records-changed", refresh); window.removeEventListener("focus", refresh); window.clearInterval(timer); };
   }, []);
 
   async function confirmDeleteOne() {
@@ -141,7 +149,7 @@ export default function MyRecords() {
       <header className="flex items-start justify-between gap-3 mb-6">
         <div>
           <h1 className="font-display font-bold text-2xl text-white mb-1">📋 My Records</h1>
-          <p className="text-white/60 text-sm">View check-ins and website visits separately.</p>
+          <p className="text-white/60 text-sm">View check-ins, invitation answers and contact details, and website visits.</p>
         </div>
 
         {activeTab === "checkins" && records.length > 0 && (
@@ -155,7 +163,9 @@ export default function MyRecords() {
         )}
       </header>
 
-      <div className="flex justify-end mb-4">
+      {visitSaveError && <p role="alert" className="mb-4 rounded-2xl bg-bloom/10 p-4 text-sm text-bloom">{visitSaveError}</p>}
+      <div className="flex justify-end gap-4 mb-4">
+        <button type="button" onClick={() => window.dispatchEvent(new Event("records-changed"))} disabled={loading} className="text-calm text-sm font-medium disabled:opacity-50">Refresh all records</button>
         <button
           type="button"
           onClick={logout}
@@ -165,7 +175,9 @@ export default function MyRecords() {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-6" role="tablist" aria-label="Record type">
+      <div className="grid grid-cols-2 gap-3 mb-6 sm:grid-cols-4" role="tablist" aria-label="Record type">
+        <button type="button" role="tab" aria-selected={activeTab === "all"} onClick={() => setActiveTab("all")} className={`rounded-2xl p-4 text-left ${activeTab === "all" ? "bg-bloom text-white" : "bg-white text-ink"}`}><span className="block font-display text-2xl font-bold">All</span><span className="text-sm font-semibold">All Records</span></button>
+        <button type="button" role="tab" aria-selected={activeTab === "invitations"} onClick={() => setActiveTab("invitations")} className={`rounded-2xl p-4 text-left transition-colors ${activeTab === "invitations" ? "bg-bloom text-white shadow-soft" : "bg-white text-ink hover:bg-bloom/5"}`}><span className="block text-2xl font-display font-bold">♡</span><span className="text-sm font-semibold">One Another Try</span><span className="mt-1 block text-xs">Answers & contact</span></button>
         <button
           type="button"
           role="tab"
@@ -196,22 +208,26 @@ export default function MyRecords() {
         </button>
       </div>
 
-      {loading && <p className="text-mist text-center py-10">Loading records…</p>}
+      {showInvitations && <div className="mb-8"><InvitationRecords /></div>}
 
-      {!loading && loadError && (
+      {loading && activeTab !== "invitations" && <p className="text-mist text-center py-10">Loading records…</p>}
+
+      {!loading && loadError && activeTab !== "invitations" && (
         <p className="text-bloomDark bg-bloom/10 rounded-2xl px-4 py-3 text-sm font-medium text-center">
           {loadError}
         </p>
       )}
+      {!loading && showCheckins && recordErrors.checkins && <p role="alert" className="my-4 rounded-2xl bg-bloom/10 p-4 text-bloom">{recordErrors.checkins}</p>}
+      {!loading && showVisits && recordErrors.visits && <p role="alert" className="my-4 rounded-2xl bg-bloom/10 p-4 text-bloom">{recordErrors.visits}</p>}
 
-      {!loading && !loadError && activeTab === "checkins" && records.length === 0 && (
+      {!loading && !recordErrors.checkins && showCheckins && records.length === 0 && (
         <div className="text-center py-14">
           <p className="font-display font-semibold text-lg text-white mb-1">No check-ins yet</p>
           <p className="text-mist text-sm">Submitted check-ins will appear here.</p>
         </div>
       )}
 
-      {!loading && !loadError && activeTab === "checkins" && records.length > 0 && (
+      {!loading && !recordErrors.checkins && showCheckins && records.length > 0 && (
         <ul className="space-y-4">
           {records.map((record) => (
             <li key={record.id} className="bg-white rounded-3xl shadow-soft p-5">
@@ -304,8 +320,8 @@ export default function MyRecords() {
         </ul>
       )}
 
-      {!loading && !loadError && activeTab === "visits" && (
-        <section>
+      {!loading && !recordErrors.visits && showVisits && (
+        <section className="mt-8" aria-label="Website visit records">
           <h2 className="font-display font-bold text-xl text-white mb-3">Website Visits</h2>
           {visits.length === 0 ? (
             <p className="text-mist text-sm">No visit details yet.</p>
@@ -313,7 +329,7 @@ export default function MyRecords() {
             <ul className="space-y-3">
               {visits.map((visit) => (
                 <li key={visit.$id} className="bg-white rounded-3xl shadow-soft p-5 text-sm">
-                  <p className="text-ink font-semibold mb-3">{formatTimestamp(visit.created_at)}</p>
+                  <p className="text-ink font-semibold mb-3">{formatTimestamp(visit.created_at || visit.$createdAt)}</p>
                   <VisitField label="Device" value={visit.device_info} />
                   <VisitField label="Platform" value={visit.platform} />
                   <VisitField label="Language" value={visit.language} />
