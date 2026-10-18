@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Check, Clock, Coffee, Heart, Leaf, Loader2, Mail, Utensils } from "lucide-react";
+import { ArrowRight, Check, Clock, Coffee, Leaf, Loader2, Mail, Utensils } from "lucide-react";
 import { ID } from "../appwrite.js";
 import { makeInvitationResponse, saveInvitationResponse } from "../data/invitations.js";
 import { Button } from "../components/ui/button.jsx";
@@ -142,14 +142,14 @@ export default function Invitation() {
   const declined = step === "declined";
   const deferred = step === "deferred";
   const finished = declined || deferred || step === "accepted" || step === "waiting";
-  const Icon = ["waiting", "checking"].includes(step) ? Clock : ["permission", "delivery", "followup-error"].includes(step) ? Mail : step === "invitation" ? Heart : declined || deferred ? Leaf : choice === "coffee" ? Coffee : Utensils;
+  const Icon = ["waiting", "checking"].includes(step) ? Clock : ["permission", "delivery", "followup-error"].includes(step) ? Mail : step === "invitation" ? Mail : declined || deferred ? Leaf : choice === "coffee" ? Coffee : Utensils;
 
   return (
     <main className="invitation-page relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-[#f8f2eb] px-5 py-8 text-[#49363c] sm:px-8">
       <div aria-hidden="true" className="invitation-glow pointer-events-none absolute inset-0 -z-10" />
       <motion.div aria-hidden="true" className="pointer-events-none absolute -right-16 top-32 -z-10 h-64 w-64 rounded-full border border-[#c48a9c]/15" animate={reduceMotion ? {} : { y: [0, -12, 0], rotate: [0, 8, 0] }} transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }} />
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between text-xs tracking-[0.15em] text-[#806a6d]">
-        <span className="flex items-center gap-2"><Heart size={16} strokeWidth={1.4} /> ONE ANOTHER TRY</span>
+        <span>QUESTION</span>
         <span className="hidden sm:block">A NOTE, JUST FOR YOU</span>
       </header>
 

@@ -86,7 +86,7 @@ export default function InvitationRecords() {
 
   return <section aria-labelledby="invitation-records-title">
     <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-      <div><h2 id="invitation-records-title" className="font-display text-xl font-bold text-white">One Another Try — answers & contact details</h2><p className="mt-1 text-sm text-white/60">{loading ? "Loading responses…" : `${sessions.length} saved session${sessions.length === 1 ? "" : "s"}`}. Details are grouped by reference, not by name.</p></div>
+      <div><h2 id="invitation-records-title" className="font-display text-xl font-bold text-white">Question — answers & contact details</h2><p className="mt-1 text-sm text-white/60">{loading ? "Loading responses…" : `${sessions.length} saved session${sessions.length === 1 ? "" : "s"}`}. Details are grouped by reference, not by name.</p></div>
       <button type="button" onClick={load} disabled={loading} className="rounded-xl border border-white/20 px-4 py-2 text-sm text-white disabled:opacity-50">Refresh invitations</button>
     </div>
     {savingNotice && <p role="alert" className="mb-5 rounded-2xl border border-sunny/30 bg-sunny/10 p-4 text-sm leading-6 text-sunny">{savingNotice}</p>}

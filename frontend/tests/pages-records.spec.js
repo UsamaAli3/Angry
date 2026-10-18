@@ -39,28 +39,28 @@ test("all page switches save, update navigation and block hidden public links", 
   const app = await mockApp(page);
   await page.goto("/settings");
   await expect(page.getByRole("switch")).toHaveCount(6);
-  const invitation = page.getByRole("switch", { name: "One Another Try", exact: true });
+  const invitation = page.getByRole("switch", { name: "Question", exact: true });
   await expect(invitation).toBeChecked();
   await invitation.click();
   await expect(page.getByText("Settings saved.")).toBeVisible();
   await expect(invitation).not.toBeChecked();
-  await expect(page.getByRole("link", { name: "One Another Try", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Question", exact: true })).toHaveCount(0);
   expect(app.saves[0].customSetting).toBe("preserve-me");
   expect(app.saves[0].pageVisibility.invitation).toBe(false);
   await page.goto("/invitation");
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("heading", { name: "Mood check-in" })).toBeVisible();
   await page.goto("/settings");
-  await page.getByRole("switch", { name: "One Another Try", exact: true }).click();
+  await page.getByRole("switch", { name: "Question", exact: true }).click();
   await expect(page.getByText("Settings saved.")).toBeVisible();
-  await page.getByRole("link", { name: "One Another Try", exact: true }).click();
+  await page.getByRole("link", { name: "Question", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Hey, there’s something/ })).toBeVisible();
 });
 
 test("all public pages can be hidden and admin settings remain reachable", async ({ page }) => {
   await mockApp(page);
   await page.goto("/settings");
-  for (const name of ["Check In", "One Another Try", "My Records", "One Another Try Responses", "Settings"]) {
+  for (const name of ["Check In", "Question", "My Records", "Question Responses", "Settings"]) {
     await page.getByRole("switch", { name, exact: true }).click();
     await expect(page.getByText("Settings saved.")).toBeVisible();
   }
@@ -78,11 +78,11 @@ test("all public pages can be hidden and admin settings remain reachable", async
 test("failed visibility changes roll back without hiding a page", async ({ page }) => {
   await mockApp(page, { failSave: true });
   await page.goto("/settings");
-  const invitation = page.getByRole("switch", { name: "One Another Try", exact: true });
+  const invitation = page.getByRole("switch", { name: "Question", exact: true });
   await invitation.click();
   await expect(page.getByText("We couldn't update page visibility.", { exact: false })).toBeVisible();
   await expect(invitation).toBeChecked();
-  await expect(page.getByRole("link", { name: "One Another Try", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Question", exact: true })).toBeVisible();
 });
 
 test("My Records groups every invitation field across pages and offers safe contact actions", async ({ page }) => {

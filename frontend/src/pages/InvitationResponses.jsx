@@ -22,7 +22,7 @@ export default function InvitationResponses() {
 
   return <main className="mx-auto max-w-3xl px-5 py-10 text-white">
     <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-      <div><h1 className="font-display text-3xl font-bold">One Another Try responses</h1><p className="mt-2 text-sm text-white/60">The latest 100 choices. Matching reference codes belong to the same invitation session.</p></div>
+      <div><h1 className="font-display text-3xl font-bold">Question responses</h1><p className="mt-2 text-sm text-white/60">The latest 100 choices. Matching reference codes belong to the same invitation session.</p></div>
       <div className="flex flex-wrap gap-3">
         <Button asChild variant="outline" className="text-white hover:text-ink"><Link to="/records?tab=invitations">View in My Records</Link></Button>
         <Button asChild><Link to="/invitation">Open invitation</Link></Button>

@@ -188,7 +188,7 @@ export default function MyRecords({ visitSaveError = "" }) {
 
       <div className="grid grid-cols-2 gap-3 mb-6 sm:grid-cols-4" role="tablist" aria-label="Record type">
         <button type="button" role="tab" aria-selected={activeTab === "all"} onClick={() => setActiveTab("all")} className={`rounded-2xl p-4 text-left ${activeTab === "all" ? "bg-bloom text-white" : "bg-white text-ink"}`}><span className="block font-display text-2xl font-bold">All</span><span className="text-sm font-semibold">All Records</span></button>
-        <button type="button" role="tab" aria-selected={activeTab === "invitations"} onClick={() => setActiveTab("invitations")} className={`rounded-2xl p-4 text-left transition-colors ${activeTab === "invitations" ? "bg-bloom text-white shadow-soft" : "bg-white text-ink hover:bg-bloom/5"}`}><span className="block text-2xl font-display font-bold">♡</span><span className="text-sm font-semibold">One Another Try</span><span className="mt-1 block text-xs">Answers & contact</span></button>
+        <button type="button" role="tab" aria-selected={activeTab === "invitations"} onClick={() => setActiveTab("invitations")} className={`rounded-2xl p-4 text-left transition-colors ${activeTab === "invitations" ? "bg-bloom text-white shadow-soft" : "bg-white text-ink hover:bg-bloom/5"}`}><span className="text-sm font-semibold">Question</span><span className="mt-1 block text-xs">Answers & contact</span></button>
         <button
           type="button"
           role="tab"
