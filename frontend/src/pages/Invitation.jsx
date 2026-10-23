@@ -171,7 +171,7 @@ export default function Invitation() {
                 </h1>
 
                 {step === "delivery" && <form onSubmit={submitDelivery} className="space-y-5 text-left">
-                  <p className="text-center text-sm leading-7 text-[#806b70]">Thank you for saying yes. Where would you like me to send your private link when the next question is ready? 😊</p>
+                  <p className="text-center text-sm leading-7 text-[#806b70]">Thank you for saying yes. Where would you like me to send the link when the next question is ready? 😊</p>
                   <label className="invitation-label" htmlFor="delivery-method">Send the next link via
                     <select id="delivery-method" className="invitation-input" value={delivery.method} onChange={event => setDelivery({ method: event.target.value, contact: "" })}>{["WhatsApp", "Phone", "Email", "Instagram", "Other"].map(method => <option key={method}>{method}</option>)}</select>
                   </label>
