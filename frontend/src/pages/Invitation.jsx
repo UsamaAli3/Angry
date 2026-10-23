@@ -192,7 +192,7 @@ export default function Invitation() {
                 {step === "followup-error" && <div className="space-y-4 text-sm text-[#806b70]"><p role="alert">{error}</p><Button variant="outline" onClick={() => setStep("checking")}>Try opening again</Button></div>}
 
                 {step === "permission" && <>
-                  <p className="mb-3 text-lg text-[#925366]">Can you please say yes? 😊</p>
+                  <p className="mb-3 text-lg text-[#925366]">Can you please say yes? </p>
                   <p className="mx-auto max-w-xs text-sm leading-7 text-[#806b70]">Just to hearing the question. Whatever your answer, there’s no pressure.</p>
                   <div className="mt-8 grid grid-cols-2 gap-3">
                     <motion.div tabIndex={-1} whileHover={reduceMotion ? {} : { y: -2 }} whileTap={reduceMotion ? {} : { scale: 0.97 }}><Button className="w-full" onClick={() => respond("permission", "yes")}>Yes</Button></motion.div>
